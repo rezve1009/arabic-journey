@@ -62,6 +62,7 @@ export function settingsPage() {
     accountSection.append(identity);
     const out = button('Sign out', () => run(async () => { await signOut(); codeSent = false; draft = null; }));
     accountSection.append(out);
+    const manage=document.createElement('a');manage.href='#/login';manage.className='button button-secondary';manage.textContent='Set a password for next time';accountSection.append(manage);
     if (account.status === 'error') {
       const error = document.createElement('p');
       error.className = 'feedback is-error';
@@ -70,7 +71,7 @@ export function settingsPage() {
       accountSection.append(error, button('Reload account', () => { draft = null; run(() => loadAccount()); }));
     }
   } else if (account.status !== 'unconfigured') {
-    accountSection.append(authForm());
+    const login=document.createElement('a');login.href='#/login';login.className='button button-primary';login.textContent='Open sign-in page';accountSection.append(login);
     if (account.error) {
       const error = document.createElement('p');
       error.className = 'feedback is-error';
@@ -93,7 +94,7 @@ export function settingsPage() {
     help.textContent = 'Sign in to save your name, language, and timezone to your account.';
     preferences.append(help);
   }
-  page.querySelector('#config-section').append(configForm());
+  const advanced=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Advanced connection settings';advanced.append(summary,configForm());page.querySelector('#config-section').append(advanced);
   const arabicSection=document.createElement('section');arabicSection.className='card settings-card';arabicSection.id='arabic-display-section';
   const arabicTitle=document.createElement('h2');arabicTitle.textContent='Arabic Display';arabicSection.append(arabicTitle);
   if(account.status==='ready')arabicSection.append(arabicDisplayForm());

@@ -1193,3 +1193,25 @@ html[lang=bn] .brand small{font-size:10px}
 .schedule-stages{padding-left:24px}.schedule-stages li{padding:12px 0;border-bottom:1px solid var(--border)}
 .schedule-stages .vocabulary-actions{gap:6px;margin:8px 0}.schedule-stages button{font-size:11px;padding:8px;min-height:40px}
 .srs-settings p{font-size:13px;color:var(--muted);line-height:1.65}.review-event-list{padding-left:24px}.review-event-list li{padding:12px 0;border-bottom:1px solid var(--border)}.review-event-list small{display:block;color:var(--muted);margin-top:6px}
+
+/* Focused authentication page: retain the shared language switch and account state. */
+.login-layout .sidebar,.login-layout .bottom-nav,.login-layout .breadcrumb,.login-layout .mobile-brand,.login-layout .page-footer{display:none}
+.login-layout .workspace{margin-left:0;margin-inline-start:0}
+.login-layout .topbar{justify-content:flex-end}
+.login-layout #main{padding:0}
+.login-page{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 78px);background:#fff}
+.login-story{background:#194d40;color:#fff;padding:44px 60px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.login-story:after{content:'';position:absolute;width:540px;height:540px;border:1px solid #ffffff16;border-radius:50%;right:-240px;bottom:-300px;box-shadow:0 0 0 70px #ffffff06,0 0 0 140px #ffffff04;pointer-events:none}
+.login-brand{display:flex;gap:14px;align-items:center;font-size:22px;font-weight:650}
+.login-story-content{margin:auto 0;padding:70px 0;max-width:460px}
+.login-story .eyebrow{color:#b8d2bd}.login-arabic{font:56px Lateef;text-align:left;color:#d9e7cf;margin:20px 0}
+.login-story h2{font-size:clamp(30px,3.4vw,48px);line-height:1.2;letter-spacing:-1px;margin:16px 0 22px}.login-story p{color:#d3e3dc;line-height:1.8}
+.login-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.login-chips span{border:1px solid #ffffff35;border-radius:30px;padding:8px 16px;font-size:12px}.login-story-foot{font-size:12px}
+.login-panel{display:flex;justify-content:center;align-items:center;padding:50px 48px;background:#fcfdfb}.login-form-wrap{width:100%;max-width:430px}.login-back{display:inline-block;color:var(--muted);font-size:12px;margin-bottom:42px}.login-panel h1{font-size:36px;letter-spacing:-1px;margin:8px 0}.login-subtitle{color:var(--muted);margin-bottom:30px}
+.login-tabs{display:flex;padding:5px;gap:3px;border:1px solid var(--border);border-radius:12px;background:#f1f4ef;margin-bottom:26px}.login-tabs .button{flex:1;padding:10px 7px;min-width:0;font-size:12px;border:0;background:transparent;border-radius:8px;box-shadow:none}.login-tabs [aria-pressed=true]{background:#fff;color:var(--primary);box-shadow:0 2px 5px #203f3010}
+.login-form input{min-height:50px}.login-form .button-primary{min-height:50px;width:100%}.login-text-button{border:0;background:none;color:var(--primary);padding:0;min-height:32px;text-align:left;align-self:flex-start;box-shadow:none}.login-help{margin-top:22px;border-top:1px solid var(--border);padding-top:18px}.login-help summary{cursor:pointer;color:var(--primary);margin-bottom:14px}.login-panel .feedback{overflow-wrap:anywhere}.login-panel .settings-help{margin:0 0 6px;line-height:1.75}
+@media(max-width:800px){.login-page{grid-template-columns:1fr}.login-story{padding:24px}.login-story-content{padding:26px 0;margin:0;max-width:none}.login-story h2{font-size:28px}.login-arabic{display:none}.login-story-foot,.login-chips{display:none}.login-panel{padding:32px 24px}.login-back{margin-bottom:24px}.login-layout .workspace{padding-bottom:0}.login-layout .topbar{padding:12px 20px}.login-panel h1{font-size:30px}}
+@media(max-width:420px){.login-tabs .button{font-size:11px}.login-story-content{padding:12px 0}.login-story h2{font-size:24px}.login-panel{padding:28px 20px}}
+
+.login-layout .app-notice{display:none}.login-panel{padding-block:32px}.login-back{margin-bottom:24px}.login-story-content{padding-block:40px}.login-subtitle{margin-bottom:22px}
+@media(max-width:800px){.login-story{padding:20px 24px}.login-story-content{padding:10px 0 0}.login-story-content>p{display:none}.login-story h2{font-size:22px;margin:10px 0 0}.login-panel{padding:26px 22px}.login-back{margin-bottom:16px}.login-brand{font-size:20px}.login-brand img{width:34px;height:34px}}

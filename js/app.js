@@ -7,6 +7,8 @@ import { initializeSupabase, subscribeAccount, getAccount, saveLanguagePreferenc
 import { settingsPage, setSettingsRenderer, updateDraftLanguage, acknowledgeLanguagePreference } from './settings.js';
 import { vocabularyPage, setVocabularyRenderer, unmountVocabulary } from './vocabulary.js';
 
+import { loginPage, setLoginRenderer } from './login.js';
+
 const desktopNav = document.getElementById('desktop-nav');
 for (const [group, label] of [['learn', ''], ['collection', 'YOUR COLLECTION'], ['tools', 'TOOLS & INSIGHTS']]) {
   if (label) {
@@ -75,7 +77,8 @@ function updateConnectivity() {
   status.textContent = t(label);
   status.setAttribute('aria-label',t(label));
   status.title = t('Browser connectivity only; learning-data sync arrives in Phase 10.');
-  document.getElementById('account-link').textContent = t(account.user ? 'Signed in' : 'Account');
+  document.getElementById('account-link').textContent = t(account.user ? 'Signed in' : 'Sign in');
+  document.getElementById('account-link').href=account.user?'#/settings':'#/login';
 }
 window.addEventListener('online', updateConnectivity);
 window.addEventListener('offline', updateConnectivity);
@@ -83,9 +86,10 @@ updateConnectivity();
 
 let initialNavigation = true;
 function renderRoute(route, navigate = false) {
+  document.body.classList.toggle('login-layout',route.id==='login');
   unmountVocabulary();
   if (document.getElementById('app-dialog').open) document.getElementById('app-dialog').close();
-  const page = route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
+  const page = route.id === 'login' ? loginPage() : route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
   translate(page);
   document.getElementById('main').replaceChildren(page);
   document.getElementById('breadcrumb-title').textContent = t(route.title);
@@ -102,6 +106,7 @@ function renderRoute(route, navigate = false) {
   initialNavigation = false;
 }
 
+setLoginRenderer(()=>{if(currentRoute()?.id==='login')renderRoute(currentRoute());});
 setSettingsRenderer(() => {
   if (currentRoute()?.id === 'settings') renderRoute(currentRoute());
 });
@@ -143,7 +148,7 @@ window.addEventListener('languagechange',()=>{
 });
 subscribeAccount(()=>{
   updateConnectivity();
-  if (['settings','vocabulary','add-word','favorites','tags','dashboard'].includes(currentRoute()?.id)) renderRoute(currentRoute());
+  if (['login','settings','vocabulary','add-word','favorites','tags','dashboard'].includes(currentRoute()?.id)) renderRoute(currentRoute());
 });
 translateShell();
 renderRoute(currentRoute() || routes[0]);

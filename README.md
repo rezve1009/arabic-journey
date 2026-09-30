@@ -101,3 +101,9 @@ Production authentication callback and Site URL: `https://rezve1009.github.io/ar
 Future updates: commit changes and run `git push origin main`; inspect the Deploy GitHub Pages workflow before assuming the live site has updated. Database migrations are separate and must be applied once, in order.
 
 Next prompt: **Implement Phase 6 only using the master specification and docs/architecture.md. Preserve Phases 1–5 and the English–Bengali toggle.**
+
+## Dedicated sign-in page
+
+Open `#/login` for email/password sign-in, confirmed-email registration, or email-link sign-in. Existing accounts created with a link can sign in by link once and choose Set a password for next time. Passwords are never kept in app drafts or local storage; Supabase manages credentials. Email confirmation and owner RLS remain enabled. Email links must be opened in the requesting browser, or pasted into the trusted-link form there. Only the configured Supabase verification endpoint is accepted. Default Supabase SMTP restricts recipients and template editing; code verification is offered only if the received email actually contains a code.
+
+Authentication wrappers, error guidance and trusted-link validation have automated tests using a fake provider. Actual password authentication and inbox confirmation require the account owner and have not been claimed as tested.

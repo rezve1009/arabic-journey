@@ -24,3 +24,8 @@ export function vocabularyClient(){
     const builder={select:()=>builder,eq:(key,value)=>{query.filters.push([key,value]);return builder;},is:(key,value)=>{query.filters.push([key,value]);return builder;},order:()=>builder,range:(start,end)=>{query.start=start;query.end=end;return builder;},single:()=>{query.single=true;return builder;},then:(resolve,reject)=>request(query).then(resolve,reject)};return builder;
   }};
 }
+
+// Password operations deliberately stay outside the disposable vocabulary adapter.
+export const signInPassword=async()=>{throw new Error('Password sign-in is not available in the disposable test server.');};
+export const signUpPassword=signInPassword;
+export const setAccountPassword=signInPassword;

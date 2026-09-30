@@ -107,7 +107,7 @@ export async function initializeSupabase() {
     if (callbackAttempt) {
       const clean = new URL(location.href);
       clean.searchParams.delete('code');
-      clean.hash = '/settings';
+      clean.hash = '/login';
       history.replaceState(null,'',clean);
     }
   } catch (error) {
@@ -115,7 +115,7 @@ export async function initializeSupabase() {
       if (callbackAttempt) {
         const clean = new URL(location.href);
         clean.searchParams.delete('code');
-        clean.hash = '/settings';
+        clean.hash = '/login';
         history.replaceState(null,'',clean);
       }
       publish({ status: 'error', error: errorMessage(error) });
@@ -160,6 +160,18 @@ export async function verifyCode(email, token) {
   const result = await requireClient().auth.verifyOtp({ email, token, type: 'email' });
   if (result.error) throw result.error;
   await loadAccount(result.data.user);
+}
+export async function signInPassword(email,password) {
+ const {data,error}=await requireClient().auth.signInWithPassword({email,password});
+ if(error)throw error;await loadAccount(data.user);
+}
+export async function signUpPassword(email,password) {
+ const emailRedirectTo=new URL('index.html',location.href).href.split(/[?#]/)[0];
+ const {data,error}=await requireClient().auth.signUp({email,password,options:{emailRedirectTo}});
+ if(error)throw error;if(data.session)await loadAccount(data.user);return Boolean(data.session);
+}
+export async function setAccountPassword(password) {
+ const {error}=await requireClient().auth.updateUser({password});if(error)throw error;
 }
 export async function signOut() {
   const { error } = await requireClient().auth.signOut({ scope: 'local' });
@@ -220,6 +232,15 @@ export async function saveArabicDisplay(values,revision) {
 
 export function errorMessage(error) {
   const code = error?.code || error?.message;
+  if(code==='invalid_credentials')return 'Email or password is incorrect. If you used an email link before, sign in with Email link and then set a password.';
+  if(code==='email_not_confirmed')return 'Confirm your email first. Check your inbox and spam folder, or request a new email link.';
+  if(code==='weak_password')return 'Choose a stronger password with at least 8 characters.';
+  if(code==='email_address_invalid')return 'Enter a valid email address.';
+  if(['email_provider_disabled','signup_disabled'].includes(code))return 'Email registration is currently unavailable. Contact the site owner.';
+  if(code==='user_already_exists')return 'This email already has an account. Sign in or use an email link.';
+  if(error?.name==='AuthPKCEGrantCodeExchangeError'||['pkce_verifier_invalid','validation_failed'].includes(code))return 'Open the newest email link in the browser where you requested it. You can also paste the link on the sign-in page.';
+  if(['unexpected_failure','unexpected_failure_database'].includes(code)||/database error/i.test(error?.message||''))return 'The account service could not finish this request. Please retry; if it continues, the site owner needs to check authentication logs.';
+
   if(code==='invalid_srs')return 'Use 1–30 stages of 1–3650 whole days and valid rating behavior.';
   if(code==='missing_srs')return 'Apply the Phase 5 database migration to save the fixed schedule.';
   if(code==='invalid_display')return 'Check Harakah mode, font size and future prefix.';
