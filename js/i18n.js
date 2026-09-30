@@ -1,0 +1,249 @@
+const bn = {
+  'Arabic Journey': 'আরবি জার্নি',
+  'A little learning, every day.': 'প্রতিদিন একটু করে শেখা।',
+  'YOUR LEARNING SPACE': 'আপনার শেখার জায়গা', 'YOUR COLLECTION': 'আপনার সংগ্রহ', 'TOOLS & INSIGHTS': 'সরঞ্জাম ও অগ্রগতি',
+  'Dashboard': 'ড্যাশবোর্ড', 'Vocabulary': 'শব্দভান্ডার', 'Add Word': 'শব্দ যোগ', 'Review': 'রিভিশন', 'Daily Quiz': 'দৈনিক কুইজ',
+  'Weak Words': 'কঠিন শব্দ', 'Mastered': 'আয়ত্ত করা শব্দ', 'Favorites': 'প্রিয় শব্দ', 'Tags / Decks': 'ট্যাগ / ডেক',
+  'History': 'ইতিহাস', 'Statistics': 'পরিসংখ্যান', 'Import / Export': 'ইমপোর্ট / এক্সপোর্ট', 'Settings': 'সেটিংস',
+  'Home': 'হোম', 'Add': 'যোগ', 'More': 'আরও', 'More pages': 'আরও পৃষ্ঠা', 'More navigation options': 'আরও পৃষ্ঠা দেখুন',
+  'Main navigation': 'মূল নেভিগেশন', 'Mobile navigation': 'মোবাইল নেভিগেশন', 'Application sidebar': 'অ্যাপ সাইডবার',
+  'Skip to content': 'মূল অংশে যান', 'Your personal journey': 'আপনার নিজের যাত্রা', 'One word at a time': 'একবারে একটি শব্দ',
+  'My learning space': 'আমার শেখার জায়গা', 'Your learning space': 'আপনার শেখার জায়গা', 'Made for steady progress.': 'নিয়মিত অগ্রগতির জন্য।',
+  'About Arabic Journey': 'আরবি জার্নি সম্পর্কে', 'Close dialog': 'বন্ধ করুন', 'Online': 'অনলাইন', 'Offline': 'অফলাইন',
+  'A LITTLE LEARNING, EVERY DAY': 'প্রতিদিন একটু করে শেখা', 'Your Arabic journey': 'আপনার আরবি শেখার যাত্রা',
+  'Make room for a few words. Build something lasting.': 'কয়েকটি শব্দের জন্য সময় দিন। শেখা ধরে রাখুন।',
+  'Add a word': 'শব্দ যোগ করুন', 'A fresh start': 'নতুন শুরু', 'Small steps.': 'ছোট ছোট পদক্ষেপ।', 'Stronger vocabulary.': 'সমৃদ্ধ শব্দভান্ডার।',
+  'Your daily review will bring the right words back': 'দৈনিক রিভিশনে প্রয়োজনীয় শব্দ ফিরে আসবে',
+  'at the right time.': 'ঠিক সময়ে।',
+  'Your daily review will bring the right words back at the right time.': 'দৈনিক রিভিশনে প্রয়োজনীয় শব্দ ঠিক সময়ে ফিরে আসবে।',
+  "Start today's review": 'আজকের রিভিশন শুরু করুন', "Today's review progress": 'আজকের রিভিশনের অগ্রগতি',
+  '0 / 0 reviewed': '০ / ০ রিভিশন হয়েছে', "Today's review progress: no words yet": 'আজকের রিভিশন: এখনো কোনো শব্দ নেই',
+  'ONE WORD AT A TIME': 'একবারে একটি শব্দ', 'Today at a glance': 'আজ এক নজরে',
+  'Words due': 'রিভিশন বাকি', 'Ready when you are': 'আপনি প্রস্তুত হলেই', 'New words': 'নতুন শব্দ', 'A fresh beginning': 'নতুন সূচনা',
+  'Reviewed today': 'আজ রিভিশন হয়েছে', 'Every review counts': 'প্রতিটি রিভিশন গুরুত্বপূর্ণ', 'Daily quiz': 'দৈনিক কুইজ', 'No quiz yet': 'এখনো কুইজ হয়নি',
+  'Recently added': 'সম্প্রতি যোগ করা', 'View vocabulary': 'শব্দভান্ডার দেখুন', 'Upcoming reviews': 'আসন্ন রিভিশন', 'Recent activity': 'সাম্প্রতিক কার্যক্রম',
+  'Learning summary': 'শেখার সারসংক্ষেপ', 'Your collection': 'আপনার সংগ্রহ', 'words and counting': 'শব্দের সংগ্রহ', 'Learning': 'শিখছেন',
+  'Reviewing': 'রিভিশন চলছে', 'Weak words': 'কঠিন শব্দ', 'Explore vocabulary': 'শব্দভান্ডার দেখুন', 'Every day matters': 'প্রতিটি দিন গুরুত্বপূর্ণ',
+  'day streak': 'দিন নিয়মিত শেখা', 'Longest streak': 'দীর্ঘতম ধারাবাহিকতা', '0 days': '০ দিন',
+  'A journey of a thousand miles': 'হাজার মাইলের যাত্রা', 'begins with a single step.': 'শুরু হয় একটি পদক্ষেপে।',
+  "You're exploring the foundation.": 'আপনি অ্যাপের ভিত্তি দেখছেন।', 'Word saving arrives in Phase 3.': '৩য় ধাপে শব্দ সংরক্ষণ চালু হবে।',
+  'Your first word is the start of something.': 'আপনার প্রথম শব্দ দিয়েই শুরু।',
+  'No words yet. Add your first Arabic word when vocabulary entry is ready.': 'এখনো শব্দ নেই। শব্দ যোগ করার সুবিধা চালু হলে প্রথম আরবি শব্দ যোগ করুন।',
+  'Explore Add Word →': 'শব্দ যোগের পৃষ্ঠা দেখুন →', 'A clear schedule': 'পরিষ্কার রিভিশন সূচি',
+  'Upcoming reviews will appear as you add and learn words.': 'শব্দ যোগ ও শেখা শুরু করলে আসন্ন রিভিশন এখানে দেখা যাবে।',
+  'Your story starts here': 'আপনার শেখার গল্প এখানেই শুরু',
+  'Your learning activity will appear here as you make progress.': 'শেখায় এগিয়ে গেলে আপনার কার্যক্রম এখানে দেখা যাবে।',
+  'Your Arabic words, meanings, and notes will live here.': 'আপনার আরবি শব্দ, অর্থ ও নোট এখানে থাকবে।',
+  'Quick Add and full word entry will help you capture what you learn.': 'দ্রুত বা বিস্তারিতভাবে শেখা শব্দ যোগ করতে পারবেন।',
+  'Review due vocabulary with flashcards and a fixed revision schedule.': 'ফ্ল্যাশকার্ড ও নির্দিষ্ট সূচিতে বাকি শব্দের রিভিশন করুন।',
+  'Practice recall with questions based on your saved vocabulary.': 'সংরক্ষিত শব্দের প্রশ্ন দিয়ে মনে করার অনুশীলন করুন।',
+  'Words that need extra practice will appear here after reviews and quizzes.': 'রিভিশন ও কুইজের পরে বাড়তি অনুশীলনের শব্দ এখানে দেখা যাবে।',
+  'Track words you know well and keep them fresh with occasional reviews.': 'আয়ত্ত করা শব্দ দেখুন এবং মাঝে মাঝে রিভিশন করুন।',
+  'Keep important vocabulary close by marking words as favorites.': 'গুরুত্বপূর্ণ শব্দ প্রিয় হিসেবে রাখুন।',
+  'Organize your vocabulary by lesson, topic, or collection.': 'পাঠ, বিষয় বা সংগ্রহ অনুযায়ী শব্দ সাজান।',
+  'Explore your review activity and learning history.': 'আপনার রিভিশন ও শেখার ইতিহাস দেখুন।',
+  'See your progress, accuracy, and study streak over time.': 'আপনার অগ্রগতি, নির্ভুলতা ও নিয়মিত শেখার হিসাব দেখুন।',
+  'Back up your learning data and bring in vocabulary from JSON or CSV.': 'শেখার তথ্য ব্যাকআপ করুন এবং JSON বা CSV থেকে শব্দ আনুন।',
+  'This space is ready for the next step.': 'পরবর্তী ধাপের জন্য এই জায়গা প্রস্তুত।',
+  'This feature will become available in its planned development phase.': 'এই সুবিধা নির্ধারিত উন্নয়ন ধাপে চালু হবে।',
+  'Back to dashboard': 'ড্যাশবোর্ডে ফিরুন', 'Planned for Phase {phase}': '{phase} নম্বর ধাপে পরিকল্পিত',
+  'A calm space to learn Arabic, one word at a time. Phase 2 adds account and cloud foundations. Vocabulary entry starts in Phase 3.': 'একবারে একটি শব্দ শিখে আরবি শেখার শান্ত জায়গা। ২য় ধাপে অ্যাকাউন্ট ও ক্লাউডের ভিত্তি যোগ হয়েছে। ৩য় ধাপে শব্দ যোগ শুরু হবে।',
+  'Cloud storage, reviews, quizzes, offline access, installation, and reminders will be added in the planned development phases.': 'শব্দ সংরক্ষণ, রিভিশন, কুইজ, অফলাইন ব্যবহার, ইনস্টল ও রিমাইন্ডার নির্ধারিত ধাপে যুক্ত হবে।',
+  'Read the architecture and roadmap →': 'আর্কিটেকচার ও পরিকল্পনা পড়ুন →',
+  'Account and preferences': 'অ্যাকাউন্ট ও পছন্দ', 'Manage your account, language, and timezone.': 'আপনার অ্যাকাউন্ট, ভাষা ও সময় অঞ্চল ঠিক করুন।',
+  'Cloud connection': 'ক্লাউড সংযোগ', 'Project URL': 'Project URL', 'Publishable / anon public key': 'Publishable / anon public key',
+  'Connect Supabase': 'Supabase সংযোগ দিন', 'Public configuration only. Never enter a secret or service-role key.': 'শুধু public configuration দিন। Secret বা service-role key দেবেন না।',
+  'Configure your Supabase project here or in js/config.js.': 'এখানে অথবা js/config.js ফাইলে Supabase project সংযোগ দিন।',
+  'Sign in or create an account': 'লগইন বা অ্যাকাউন্ট তৈরি', 'Email address': 'ইমেইল ঠিকানা', 'Send sign-in code': 'লগইন কোড পাঠান',
+  'Enter the code from your email. A new account is created if needed.': 'ইমেইলের কোড দিন। প্রয়োজন হলে নতুন অ্যাকাউন্ট তৈরি হবে।',
+  'Email code': 'ইমেইলের কোড', 'Verify code': 'কোড যাচাই করুন', 'Use another email': 'অন্য ইমেইল ব্যবহার করুন',
+  'A sign-in code has been sent. Check your inbox and spam folder.': 'লগইন কোড পাঠানো হয়েছে। ইনবক্স ও স্প্যাম দেখুন।',
+  'Signed in': 'লগইন করা আছে', 'Sign out': 'লগআউট', 'Signed out': 'লগআউট করা আছে', 'Loading your account…': 'আপনার অ্যাকাউন্ট লোড হচ্ছে…',
+  'Cloud ready': 'ক্লাউড প্রস্তুত', 'Not connected': 'সংযুক্ত নয়', 'Connecting…': 'সংযোগ হচ্ছে…', 'Connection error': 'সংযোগে সমস্যা',
+  'Browser connectivity only; learning-data sync arrives in Phase 10.': 'ব্রাউজারের সংযোগ অবস্থা; শেখার তথ্যের sync ১০ম ধাপে আসবে।',
+  'Profile': 'প্রোফাইল', 'Display name': 'প্রদর্শিত নাম', 'Language': 'ভাষা', 'Timezone': 'সময় অঞ্চল',
+  'Choose an IANA timezone, for example Asia/Dhaka.': 'IANA সময় অঞ্চল দিন, যেমন Asia/Dhaka।',
+  'Save preferences': 'পছন্দ সংরক্ষণ করুন', 'Preferences saved to your account.': 'আপনার অ্যাকাউন্টে পছন্দ সংরক্ষিত হয়েছে।',
+  'Saving…': 'সংরক্ষণ হচ্ছে…', 'Working…': 'কাজ চলছে…', 'Reload account': 'অ্যাকাউন্ট আবার লোড করুন',
+  'Your changes have not been saved. Keep them or reload the account to get the latest version.': 'আপনার পরিবর্তন সংরক্ষিত হয়নি। পরিবর্তন রেখে দিন অথবা সর্বশেষ তথ্য পেতে অ্যাকাউন্ট আবার লোড করুন।',
+  'Language changed on this device. Sign in and save preferences to also store it in your account.': 'এই ডিভাইসের ভাষা বদলেছে। অ্যাকাউন্টেও রাখতে লগইন করে পছন্দ সংরক্ষণ করুন।',
+  'Language changed on this device, but could not be saved to your account. Retry from Settings.': 'ডিভাইসের ভাষা বদলেছে, তবে অ্যাকাউন্টে সংরক্ষণ হয়নি। সেটিংস থেকে আবার চেষ্টা করুন।',
+  'Language saved to your account.': 'ভাষা অ্যাকাউন্টে সংরক্ষিত হয়েছে।',
+  'Revision': 'রিভিশন', 'Notifications': 'নোটিফিকেশন', 'Quiz': 'কুইজ', 'Arabic Display': 'আরবি প্রদর্শন', 'Daily Goal': 'দৈনিক লক্ষ্য', 'Appearance': 'চেহারা', 'Backup': 'ব্যাকআপ', 'Account': 'অ্যাকাউন্ট',
+  'Learning controls will become available with their planned phases.': 'শেখার সেটিংস নির্ধারিত ধাপে চালু হবে।',
+  'Light theme': 'হালকা থিম', 'Fixed schedule: 1 → 3 → 7 → 15 → 30 days; repeat every 30 days.': 'নির্দিষ্ট সূচি: ১ → ৩ → ৭ → ১৫ → ৩০ দিন; এরপর প্রতি ৩০ দিন।',
+  'No notification permission is requested in this phase.': 'এই ধাপে নোটিফিকেশনের অনুমতি চাওয়া হবে না।',
+  'Please use a valid HTTPS project URL and a public Supabase key.': 'সঠিক HTTPS project URL ও public Supabase key দিন।',
+  'Private keys cannot be used in this app. Use a publishable or anon key.': 'এই অ্যাপে private key ব্যবহার করা যাবে না। Publishable বা anon key দিন।',
+  'Unable to store configuration on this device. Check browser storage permissions.': 'ডিভাইসে configuration রাখা যায়নি। ব্রাউজারের storage অনুমতি দেখুন।',
+  'You are offline. Reconnect and try again.': 'আপনি অফলাইনে আছেন। সংযোগ ফিরলে আবার চেষ্টা করুন।',
+  'Could not reach Supabase. Check the project connection and try again.': 'Supabase-এ সংযোগ হয়নি। Project সংযোগ দেখে আবার চেষ্টা করুন।',
+  'Sign in again to continue.': 'চালিয়ে যেতে আবার লগইন করুন।', 'Too many attempts. Please wait before trying again.': 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।',
+  'The code is invalid or expired. Request a new sign-in code.': 'কোড সঠিক নয় বা মেয়াদ শেষ। নতুন লগইন কোড নিন।',
+  'Account data is unavailable. Apply the Phase 2 database migration, then reload.': 'অ্যাকাউন্টের তথ্য পাওয়া যায়নি। Phase 2 database migration প্রয়োগ করে আবার লোড করুন।',
+  'This account is not allowed to make that change.': 'এই পরিবর্তনের অনুমতি এই অ্যাকাউন্টে নেই।',
+  'Account data changed on another device. Reload before saving.': 'অন্য ডিভাইসে অ্যাকাউন্টের তথ্য বদলেছে। সংরক্ষণের আগে আবার লোড করুন।',
+  'Check the name, language, and timezone, then try again.': 'নাম, ভাষা ও সময় অঞ্চল দেখে আবার চেষ্টা করুন।',
+  'Something went wrong. Your changes were not saved. Please try again.': 'সমস্যা হয়েছে। পরিবর্তন সংরক্ষিত হয়নি। আবার চেষ্টা করুন।',
+  'Supabase is not configured yet.': 'Supabase এখনো সংযুক্ত হয়নি।',
+  'Send sign-in link': 'লগইন লিংক পাঠান',
+  'Open the sign-in link from your email in this same browser. A new account is created if needed.': 'ইমেইলের লগইন লিংক এই একই ব্রাউজারে খুলুন। প্রয়োজন হলে নতুন অ্যাকাউন্ট তৈরি হবে।',
+  'If your email includes a code instead of a link, enter it below. Otherwise, open the email link.': 'ইমেইলে লিংকের বদলে কোড থাকলে নিচে দিন। অন্যথায় ইমেইলের লিংক খুলুন।',
+  'A sign-in email has been sent. Check your inbox and spam folder.': 'লগইনের ইমেইল পাঠানো হয়েছে। ইনবক্স ও স্প্যাম দেখুন।',
+  'The sign-in link or code is invalid or expired. Request a new sign-in email in this browser.': 'লগইন লিংক বা কোড সঠিক নয় অথবা মেয়াদ শেষ। এই ব্রাউজার থেকে নতুন লগইন ইমেইল নিন।',
+  'The default email service only sends to Supabase organization members. Use your Supabase account email or configure custom SMTP.': 'Default email service শুধু Supabase organization-এর সদস্যকে ইমেইল পাঠায়। আপনার Supabase অ্যাকাউন্টের ইমেইল ব্যবহার করুন অথবা custom SMTP সংযোগ দিন।',
+  'Sign in to save your name, language, and timezone to your account.': 'নাম, ভাষা ও সময় অঞ্চল অ্যাকাউন্টে রাখতে লগইন করুন।',
+};
+for (let phase = 1; phase <= 14; phase++) bn[`Phase ${phase}`] = `${phase} নম্বর ধাপ`;
+Object.assign(bn, {
+  'Save a word today. Keep its meaning close.':'আজ একটি শব্দ লিখে রাখুন। তার অর্থ মনে রাখুন।',
+  'Sign in to use your vocabulary':'আপনার শব্দভান্ডার ব্যবহার করতে লগইন করুন',
+  'Your words are stored privately in your account.':'আপনার শব্দগুলো আপনার অ্যাকাউন্টে ব্যক্তিগতভাবে রাখা হয়।',
+  'Open Settings':'সেটিংস খুলুন','Loading…':'লোড হচ্ছে…','Retry':'আবার চেষ্টা করুন',
+  'Arabic word':'আরবি শব্দ','Bengali meaning':'বাংলা অর্থ','English meaning':'ইংরেজি অর্থ',
+  'Arabic meaning':'আরবি অর্থ','Transliteration':'উচ্চারণ','Word type':'শব্দের ধরন',
+  'Arabic example':'আরবি উদাহরণ','Bengali example':'বাংলা উদাহরণ','English example':'ইংরেজি উদাহরণ',
+  'Notes':'নোট','Favorite':'পছন্দের','Needs details':'বিস্তারিত প্রয়োজন',
+  'Quick Add':'দ্রুত যোগ','Full Add':'বিস্তারিত যোগ','Save word':'শব্দ সংরক্ষণ','Save changes':'পরিবর্তন সংরক্ষণ',
+  'Arabic, Bengali and English are required. Quick Add marks a word as needing details.':'আরবি শব্দ, বাংলা ও ইংরেজি অর্থ আবশ্যক। দ্রুত যোগ করা শব্দে বিস্তারিত প্রয়োজন চিহ্ন দেওয়া হয়।',
+  'Clear draft':'খসড়া মুছুন','Clear this draft?':'এই খসড়া মুছবেন?',
+  'An unsaved draft is kept. Clear it to open another word.':'অসংরক্ষিত খসড়া রাখা আছে। অন্য শব্দ খুলতে আগে খসড়া মুছুন।',
+  'Open latest word':'সর্বশেষ শব্দ খুলুন','Create tags or decks on the Tags page.':'ট্যাগ পাতায় ট্যাগ বা ডেক তৈরি করুন।',
+  'Manage tags / decks':'ট্যাগ / ডেক পরিচালনা','Tag':'ট্যাগ','Deck':'ডেক','Kind':'ধরন','Name':'নাম','Create':'তৈরি করুন',
+  'No tags or decks yet.':'এখনো ট্যাগ বা ডেক নেই।','View words':'শব্দ দেখুন','Rename':'নাম বদলান','Delete':'মুছুন',
+  'Delete this tag or deck? Words will be kept.':'এই ট্যাগ বা ডেক মুছবেন? শব্দগুলো রাখা হবে।',
+  'Search words, meanings, examples or tags':'শব্দ, অর্থ, উদাহরণ বা ট্যাগ খুঁজুন','Search vocabulary':'শব্দভান্ডারে খুঁজুন',
+  'All types':'সব ধরন','All words':'সব শব্দ','All tags / decks':'সব ট্যাগ / ডেক','Word status':'শব্দের অবস্থা',
+  'Added from (UTC)':'যোগ করার শুরুর তারিখ (UTC)','Added through (UTC)':'যোগ করার শেষ তারিখ (UTC)',
+  'Clear filters':'ফিল্টার মুছুন','{count} words':'{count}টি শব্দ','No words found':'কোনো শব্দ পাওয়া যায়নি',
+  'Add your first word or change the filters.':'প্রথম শব্দ যোগ করুন অথবা ফিল্টার বদলান।',
+  'Previous':'আগের','Next':'পরের','Page {page}':'পাতা {page}',
+  'verb':'ক্রিয়া','noun':'বিশেষ্য','adjective':'বিশেষণ','particle':'অব্যয়','phrase':'বাক্যাংশ','other':'অন্যান্য',
+  'Add favorite':'পছন্দের তালিকায় রাখুন','Remove favorite':'পছন্দের তালিকা থেকে সরান','Favorite updated.':'পছন্দের তালিকা হালনাগাদ হয়েছে।',
+  'Back to vocabulary':'শব্দভান্ডারে ফিরুন','Edit word':'শব্দ সম্পাদনা','Delete word':'শব্দ মুছুন','Added':'যোগ করা হয়েছে',
+  'Last edited':'সর্বশেষ সম্পাদনা','None':'নেই','Word saved.':'শব্দ সংরক্ষিত হয়েছে।','Word deleted.':'শব্দ মুছে দেওয়া হয়েছে।',
+  'Tag saved.':'ট্যাগ সংরক্ষিত হয়েছে।','Tag deleted.':'ট্যাগ মুছে দেওয়া হয়েছে।',
+  'Delete this word? It will leave your collection. Learning history is preserved.':'এই শব্দ মুছবেন? এটি আপনার তালিকা থেকে সরে যাবে। শেখার ইতিহাস রাখা হবে।',
+  'Confirm':'নিশ্চিত করুন','Cancel':'বাতিল','Possible duplicate':'একই শব্দ থাকতে পারে',
+  'This word may already exist.':'এই শব্দটি আগে থেকেই থাকতে পারে।','Open Existing':'আগের শব্দ খুলুন',
+  'Update Existing':'আগের শব্দ সম্পাদনা','Add Anyway':'তবুও যোগ করুন',
+  'Review scheduling begins in Phase 5. Morphology fields arrive in Phase 4.':'৫ নম্বর ধাপে রিভিউ সূচি এবং ৪ নম্বর ধাপে শব্দের গঠন যোগ হবে।',
+  'This item changed on another device. Your draft is kept. Open the latest item before saving again.':'অন্য ডিভাইসে এই তথ্য বদলেছে। আপনার খসড়া রাখা আছে। আবার সংরক্ষণের আগে সর্বশেষ তথ্য খুলুন।',
+  'That tag or deck name already exists.':'এই নামে ট্যাগ বা ডেক আগে থেকেই আছে।',
+  'Check the required fields and selected tags, then try again.':'আবশ্যক তথ্য ও নির্বাচিত ট্যাগ দেখে আবার চেষ্টা করুন।',
+  'Vocabulary is unavailable. Apply the Phase 3 database migration.':'শব্দভান্ডার পাওয়া যাচ্ছে না। ৩ নম্বর ধাপের database migration চালু করুন।',
+  'This word is unavailable or has been deleted.':'শব্দটি পাওয়া যাচ্ছে না অথবা মুছে দেওয়া হয়েছে।',
+  'Sign in to see your collection.':'আপনার শব্দভান্ডার দেখতে লগইন করুন।',
+  'Collection could not be loaded. Retry from Vocabulary.':'শব্দভান্ডার লোড হয়নি। শব্দভান্ডার পাতা থেকে আবার চেষ্টা করুন।',
+  'Reviews and learning statistics arrive in later phases.':'রিভিউ ও শেখার পরিসংখ্যান পরবর্তী ধাপে আসবে।',
+  'Add demo words':'নমুনা শব্দ যোগ করুন','Add three demo words to your account?':'আপনার অ্যাকাউন্টে তিনটি নমুনা শব্দ যোগ করবেন?',
+  'Demo words added. Existing matches were kept.':'নমুনা শব্দ যোগ হয়েছে। আগে থাকা মিলগুলো রাখা হয়েছে।',
+  'Use latest version':'সর্বশেষ সংস্করণ ব্যবহার করুন','Replace this draft with the latest saved version?':'এই খসড়ার বদলে সর্বশেষ সংরক্ষিত সংস্করণ ব্যবহার করবেন?',
+  'A calm space to learn Arabic, one word at a time. Save, organize and find your vocabulary.':'একটি করে আরবি শব্দ শেখার শান্ত জায়গা। শব্দ সংরক্ষণ করুন, সাজান ও খুঁজে নিন।',
+  'Favorites only':'শুধু পছন্দের শব্দ','Review, weak/mastered and root filters arrive with their planned phases.':'রিভিউ, কঠিন/আয়ত্ত করা শব্দ ও মূল অক্ষরের ফিল্টার নির্ধারিত ধাপে আসবে।',
+  'Unavailable tag — uncheck to remove':'ট্যাগটি নেই — সরাতে টিক তুলে দিন',
+});
+
+Object.assign(bn, {
+  'Arabic morphology':'আরবি শব্দের গঠন','Root letters':'মূল অক্ষর','Root meaning':'মূলের অর্থ','Wazn / pattern':'ওজন / ছাঁচ',
+  'Verb form':'ক্রিয়ার Form','Form {form}':'Form {form}','Not specified':'উল্লেখ করা হয়নি','Masdars':'মাসদার',
+  'Past base':'অতীতের মূল রূপ','Present base':'বর্তমানের মূল রূপ','Imperative base':'আদেশের মূল রূপ',
+  'Active participle':'ইসমে ফায়েল','Passive participle':'ইসমে মাফউল','Grammar source':'গঠনের তথ্যের উৎস',
+  'Manual':'নিজে লিখেছি','Teacher':'শিক্ষক','Imported':'ইমপোর্ট করা','AI suggestion (unverified)':'AI পরামর্শ (যাচাই হয়নি)',
+  'Singular':'একবচন','Dual':'দ্বিবচন','Plurals':'বহুবচন','Broken plurals':'ভাঙা বহুবচন','Masculine':'পুংলিঙ্গ','Feminine':'স্ত্রীলিঙ্গ',
+  'Synonyms':'সমার্থক শব্দ','Antonyms':'বিপরীত শব্দ','One item per line; up to 20 items.':'প্রতি লাইনে একটি; সর্বোচ্চ ২০টি।',
+  'Enter grammar from your teacher or a trusted reference. Missing forms stay empty.':'শিক্ষক বা নির্ভরযোগ্য উৎস থেকে রূপগুলো লিখুন। অজানা রূপ ফাঁকা থাকবে।',
+  'Grammar for other word types is kept and hidden. Editing always shows original Harakah.':'অন্য ধরনের শব্দের গঠন সংরক্ষিত থাকে ও লুকানো হয়। সম্পাদনায় মূল হারাকাত দেখা যায়।',
+  '14 pronoun conjugations':'১৪ সর্বনামের ক্রিয়ার রূপ','Compact View':'সংক্ষিপ্ত দৃশ্য','Expanded View':'বিস্তারিত দৃশ্য',
+  'Past, present, future and imperative':'অতীত, বর্তমান, ভবিষ্যৎ ও আদেশ','Pronoun':'সর্বনাম','Past':'অতীত','Present':'বর্তমান','Future':'ভবিষ্যৎ','Imperative':'আদেশ',
+  'Future is derived from each saved present form. Imperative applies only to second-person pronouns.':'সংরক্ষিত বর্তমান রূপ থেকে ভবিষ্যৎ দেখানো হয়। আদেশ শুধু দ্বিতীয় পুরুষের সর্বনামে প্রযোজ্য।',
+  'No conjugations entered. Choose Expanded View to see all 14 pronouns.':'ক্রিয়ার রূপ লেখা হয়নি। ১৪ সর্বনাম দেখতে বিস্তারিত দৃশ্য নির্বাচন করুন।',
+  'He':'সে (পুরুষ)','They two (masculine)':'তারা দুজন (পুরুষ)','They (masculine)':'তারা (পুরুষ)',
+  'She':'সে (নারী)','They two (feminine)':'তারা দুজন (নারী)','They (feminine)':'তারা (নারী)',
+  'You (masculine singular)':'তুমি (পুরুষ একবচন)','You two (masculine)':'তোমরা দুজন (পুরুষ)','You (masculine plural)':'তোমরা (পুরুষ বহুবচন)',
+  'You (feminine singular)':'তুমি (নারী একবচন)','You two (feminine)':'তোমরা দুজন (নারী)','You (feminine plural)':'তোমরা (নারী বহুবচন)',
+  'You (masculine)':'তুমি (পুরুষ)','You all (masculine)':'তোমরা (পুরুষ)','You (feminine)':'তুমি (নারী)','You all (feminine)':'তোমরা (নারী)',
+  'I':'আমি','We':'আমরা','Root filter':'মূল অক্ষরের ফিল্টার','Search comparison':'অনুসন্ধানের তুলনা',
+  'Ignore Harakah':'হারাকাত উপেক্ষা','Ignore Tatweel':'তাতওয়ীল উপেক্ষা','Normalize Unicode':'Unicode সমান করুন',
+  'Enter exactly 3 or 4 Arabic root letters.':'ঠিক ৩ বা ৪টি আরবি মূল অক্ষর লিখুন।',
+  'Enter up to 20 items, each no longer than 200 characters.':'সর্বোচ্চ ২০টি লিখুন; প্রতিটি সর্বোচ্চ ২০০ অক্ষর।',
+  'Use up to 20 items, with at most 200 characters each.':'সর্বোচ্চ ২০টি লিখুন; প্রতিটি সর্বোচ্চ ২০০ অক্ষর।',
+  'ك ت ب or د ح ر ج':'ك ت ب অথবা د ح ر ج',
+  'Review and weak/mastered filters arrive with their planned phases.':'রিভিউ ও কঠিন/আয়ত্ত করা শব্দের ফিল্টার নির্ধারিত ধাপে আসবে।',
+  'Review scheduling begins in Phase 5.':'৫ নম্বর ধাপে রিভিউ সূচি শুরু হবে।',
+  'Vocabulary is unavailable. Apply the Phase 4 database migration.':'শব্দভান্ডার পাওয়া যাচ্ছে না। ৪ নম্বর ধাপের database migration চালু করুন।',
+  'Sign in to save Arabic display preferences.':'আরবি প্রদর্শনের পছন্দ সংরক্ষণ করতে লগইন করুন।',
+  'Harakah display':'হারাকাত প্রদর্শন','Always Show':'সবসময় দেখান','Hide During Quiz':'কুইজের সময় লুকান','Always Hide':'সবসময় লুকান',
+  'Arabic font size':'আরবি অক্ষরের আকার','Future prefix':'ভবিষ্যতের উপসর্গ','Save Arabic display':'আরবি প্রদর্শন সংরক্ষণ',
+  'Display preferences never change stored Arabic. Hide During Quiz will apply when quizzes arrive in Phase 7; revealed answers show the original.':'প্রদর্শনের পছন্দে সংরক্ষিত আরবি বদলায় না। ৭ নম্বর ধাপে কুইজ এলে হারাকাত লুকানো প্রযোজ্য হবে; উত্তর প্রকাশ করলে মূল লেখা দেখা যাবে।',
+  'Arabic display preferences saved.':'আরবি প্রদর্শনের পছন্দ সংরক্ষিত হয়েছে।','Reload display preferences':'প্রদর্শনের পছন্দ আবার লোড করুন',
+  'Replace the display draft with the latest saved preferences?':'খসড়ার বদলে সর্বশেষ সংরক্ষিত প্রদর্শনের পছন্দ ব্যবহার করবেন?',
+  'Check Harakah mode, font size and future prefix.':'হারাকাত, অক্ষরের আকার ও ভবিষ্যতের উপসর্গ যাচাই করুন।',
+  'Apply the Phase 4 database migration to save Arabic display preferences.':'আরবি প্রদর্শনের পছন্দ সংরক্ষণ করতে ৪ নম্বর ধাপের migration চালু করুন।',
+});
+
+Object.assign(bn,{
+ 'Fixed Schedule':'নির্দিষ্ট সূচি','Fixed review schedule':'নির্দিষ্ট রিভিউ সূচি','Sign in to edit your fixed schedule.':'আপনার নির্দিষ্ট সূচি সম্পাদনা করতে লগইন করুন।',
+ 'Days are elapsed 24-hour intervals; dates use your saved timezone.':'দিন বলতে ২৪ ঘণ্টার interval বোঝায়; তারিখে আপনার সংরক্ষিত সময় অঞ্চল ব্যবহৃত হয়।','Times use {timezone}.':'সময়ে {timezone} ব্যবহৃত হয়।',
+ 'Intervals are days between reviews. New words start at the first interval; Good advances one stage. After the final stage, the long-term interval repeats.':'Interval হলো দুই রিভিউয়ের মধ্যের দিনসংখ্যা। নতুন শব্দ প্রথম interval থেকে শুরু হয়; Good একটি ধাপ এগিয়ে নেয়। শেষ ধাপের পরে দীর্ঘমেয়াদি interval বারবার চলবে।',
+ 'Stage {stage} days':'ধাপ {stage}-এর দিন','Move stage {stage} up':'ধাপ {stage} উপরে নিন','Move stage {stage} down':'ধাপ {stage} নিচে নিন','Delete stage {stage}':'ধাপ {stage} মুছুন',
+ 'Add stage':'ধাপ যোগ করুন','Long-term repeat days':'দীর্ঘমেয়াদি পুনরাবৃত্তির দিন','Rating behavior':'রেটিংয়ের আচরণ',
+ 'Again interval days':'Again-এর interval দিন','Hard interval factor':'Hard-এর interval গুণক','Easy extra stages to skip':'Easy-তে অতিরিক্ত বাদ দেওয়ার ধাপ',
+ 'Again resets to the first stage. Hard keeps the stage and shortens its interval, rounded up to at least one day. Easy advances one stage plus the extra skip.':'Again প্রথম ধাপে ফেরায়। Hard একই ধাপে রেখে interval কমায়; পূর্ণ দিনে উপরের দিকে নেওয়া হয়, অন্তত এক দিন। Easy এক ধাপের সঙ্গে অতিরিক্ত ধাপ এগোয়।',
+ 'Saving creates a new schedule version. Existing due dates and history stay unchanged; the next recorded review uses the new settings. Adaptive SRS is reserved for a later version.':'সংরক্ষণ করলে সূচির নতুন সংস্করণ তৈরি হয়। আগের due date ও history অক্ষত থাকে; পরের রেকর্ড করা রিভিউয়ে নতুন সেটিংস ব্যবহৃত হয়। Adaptive SRS পরবর্তী সংস্করণের জন্য নির্ধারিত।',
+ 'Reset schedule draft to default':'সূচির খসড়া ডিফল্ট করুন','Save fixed schedule':'নির্দিষ্ট সূচি সংরক্ষণ','Reload schedule preferences':'সূচির পছন্দ আবার লোড করুন',
+ 'Replace the schedule draft with the latest saved preferences?':'সূচির খসড়ার বদলে সর্বশেষ সংরক্ষিত পছন্দ ব্যবহার করবেন?',
+ 'Fixed schedule saved. Existing due dates were kept.':'নির্দিষ্ট সূচি সংরক্ষিত হয়েছে। আগের due date রাখা হয়েছে।',
+ 'Use 1–30 stages of 1–3650 whole days and valid rating behavior.':'১–৩০টি ধাপে ১–৩৬৫০ পূর্ণ দিন এবং সঠিক রেটিং আচরণ দিন।',
+ 'Apply the Phase 5 database migration to save the fixed schedule.':'নির্দিষ্ট সূচি সংরক্ষণ করতে ৫ নম্বর ধাপের database migration চালু করুন।',
+ 'Loading review schedule…':'রিভিউ সূচি লোড হচ্ছে…','Review stage':'রিভিউয়ের ধাপ','Interval days':'Interval দিন','Next review':'পরের রিভিউ',
+ 'Schedule version':'সূচির সংস্করণ','Recorded reviews':'রেকর্ড করা রিভিউ','Due now':'এখন রিভিউ করার সময়','Scheduled':'সূচি নির্ধারিত',
+ 'No fixed schedule state is available.':'নির্দিষ্ট সূচির তথ্য পাওয়া যাচ্ছে না।','Recent review history':'সাম্প্রতিক রিভিউ ইতিহাস',
+ 'No recorded reviews yet. Rating controls arrive in Phase 6.':'এখনও রিভিউ রেকর্ড হয়নি। ৬ নম্বর ধাপে রেটিং বোতাম আসবে।',
+ 'again':'আবার','hard':'কঠিন','good':'ভালো','easy':'সহজ','Stage {before} → {after}; {days} days':'ধাপ {before} → {after}; {days} দিন',
+ 'Scheduled review':'নির্ধারিত রিভিউ','Recorded practice':'রেকর্ড করা অনুশীলন','Response time: {ms} ms':'উত্তরের সময়: {ms} ms',
+ 'Showing the latest 25 reviews. Full history arrives in Phase 9.':'সর্বশেষ ২৫টি রিভিউ দেখানো হচ্ছে। ৯ নম্বর ধাপে পূর্ণ ইতিহাস আসবে।',
+ 'Review schedule could not be loaded.':'রিভিউ সূচি লোড হয়নি।','No upcoming reviews. Due words are counted above.':'সামনে নির্ধারিত রিভিউ নেই। এখন রিভিউয়ের শব্দসংখ্যা উপরে দেখানো হয়েছে।',
+});
+
+let language = 'en';
+try { language = localStorage.getItem('arabic-journey.language') === 'bn' ? 'bn' : 'en'; } catch { /* Browsing still works without storage. */ }
+const originals = new WeakMap();
+const attributes = new WeakMap();
+export const getLanguage = () => language;
+export function t(text, values = {}) {
+  let result = language === 'bn' ? (bn[text] || text) : text;
+  for (const [key, value] of Object.entries(values)) result = result.replaceAll(`{${key}}`, value);
+  return result;
+}
+export function setLanguage(value, { notify = true } = {}) {
+  language = value === 'bn' ? 'bn' : 'en';
+  try { localStorage.setItem('arabic-journey.language', language); } catch { /* Preference is session-only when storage is denied. */ }
+  document.documentElement.lang = language;
+  document.documentElement.dir = 'ltr';
+  if (notify) window.dispatchEvent(new Event('languagechange'));
+}
+
+// Translate only UI text, never original Arabic, form values, or user-owned content.
+export function translate(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.parentElement?.closest('script,style,code,input,textarea,[lang="ar"],[data-no-translate]')) continue;
+    if (!originals.has(node)) originals.set(node, node.nodeValue);
+    const original = originals.get(node);
+    const key = original.trim().replace(/\s+/g, ' ');
+    const translated = t(key);
+    node.nodeValue = original.replace(original.trim(), translated);
+  }
+  for (const element of [root, ...root.querySelectorAll('[aria-label],[title],[placeholder]')]) {
+    if (!(element instanceof Element) || element.closest('[data-no-translate]')) continue;
+    if (!attributes.has(element)) attributes.set(element, {});
+    const saved = attributes.get(element);
+    for (const name of ['aria-label','title','placeholder']) {
+      if (!element.hasAttribute(name)) continue;
+      if (!(name in saved)) saved[name] = element.getAttribute(name);
+      element.setAttribute(name, t(saved[name]));
+    }
+  }
+}

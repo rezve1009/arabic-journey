@@ -1,0 +1,14 @@
+{
+  "id": "./",
+  "name": "Arabic Journey — Vocabulary Learning",
+  "short_name": "Arabic Journey",
+  "description": "Build your Arabic vocabulary, one word at a time.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./index.html#/dashboard",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafbf9",
+  "theme_color": "#245e4f",
+  "icons": [{ "src": "./icons/app.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

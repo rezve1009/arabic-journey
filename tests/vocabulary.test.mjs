@@ -1,0 +1,74 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { PGlite } from '@electric-sql/pglite';
+
+test('Phase 3: transactional CRUD, duplicates, search, pagination, revisions and isolation',async(context)=>{
+  const db=new PGlite();const alice=randomUUID(),bob=randomUUID(),word=randomUUID(),tag=randomUUID();
+  const values={arabic_word:'كَتَبَ',bangla_meaning:'লিখেছে',english_meaning:'wrote',word_type:'verb',notes:'Keep <script> as text',needs_details:true};
+  const write=async(action,id,revision=null,data={},tags=[],allow=false,op=randomUUID())=>(await db.query('select public.vocabulary_write($1,$2,$3,$4,$5,$6,$7) as result',[op,action,id,revision,JSON.stringify(data),tags,allow])).rows[0].result;
+  const list=async(search='',type='',status='',tagId=null,favorite=false,page=0)=>(await db.query('select public.vocabulary_list($1,$2,$3,$4,$5,null,null,$6) as result',[search,type,status,tagId,favorite,page])).rows[0].result;
+  try {
+    await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);
+      create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+      grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+    for(const file of ['202609300001_foundation.sql','202609300002_vocabulary.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+    await db.query('insert into auth.users(id) values($1),($2)',[alice,bob]);
+    await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${alice}',false);`);
+    const savedTag=(await write('tag-save',tag,null,{name:'Lesson 1',kind:'deck'})).tag;
+    const op=randomUUID();let saved=(await write('save',word,null,values,[tag],false,op)).word;
+    assert.equal(saved.arabic_word,'كَتَبَ');assert.equal(saved.normalized_arabic,'كتب');
+    const replay=await write('save',word,null,values,[tag],false,op);assert.equal(replay.word.revision,saved.revision);
+    assert.equal((await list()).total,1);
+    await assert.rejects(write('save',word,null,{...values,english_meaning:'changed'},[tag],false,op),/reused/);
+    assert.equal((await list('كتب')).total,1);assert.equal((await list('লিখেছে')).total,1);assert.equal((await list('Lesson 1')).total,1);
+    assert.equal((await list('WRoTe','verb','needs-details',tag)).total,1);
+    const duplicate=randomUUID();const warning=await write('save',duplicate,null,{...values,arabic_word:'كـتب'});
+    assert.equal(warning.duplicates[0].id,word);assert.equal((await list()).total,1);
+    await write('save',duplicate,null,{...values,arabic_word:'كتب'},[],true);assert.equal((await list()).total,2);
+    await assert.rejects(write('save',word,saved.revision,{...values,english_meaning:'Should roll back'},[randomUUID()],true),/Tag unavailable/);
+    assert.equal((await db.query('select english_meaning from public.words where id=$1',[word])).rows[0].english_meaning,'wrote');
+    saved=(await write('favorite',word,saved.revision,{favorite:true})).word;
+    assert.equal((await list('','','',null,true)).total,1);
+    await assert.rejects(write('save',word,saved.revision-1,values,[tag],true),/changed/);
+    await db.exec('reset role');await db.query("update public.words set root=array['ك','ت','ب'],past_base='كَتَبَ' where id=$1",[word]);
+    saved=(await db.query('select * from public.words where id=$1',[word])).rows[0];
+    await db.exec('set role authenticated');
+    saved=(await write('save',word,saved.revision,{...values,notes:'Edited'},[],true)).word;
+    assert.equal(saved.past_base,'كَتَبَ');assert.deepEqual(saved.root,['ك','ت','ب']);
+    assert.equal((await list('','','',tag)).total,0,'removed links are tombstoned');
+    await write('save',word,saved.revision,values,[tag],true);
+    await assert.rejects(write('save',randomUUID(),null,{...values,user_id:bob}),/Unsupported/);
+    await assert.rejects(db.exec('delete from public.words'),/permission denied/);
+    await db.exec(`select set_config('request.jwt.claim.sub','${bob}',false);`);
+    assert.equal((await list()).total,0);
+    await assert.rejects(write('favorite',word,1,{favorite:false}),/changed/);
+    await assert.rejects(write('save',randomUUID(),null,values,[tag]),/Tag unavailable/);
+    assert.equal((await db.query('select * from public.tags')).rows.length,0);
+    await assert.rejects(db.exec('select * from app_private.sync_operations'),/permission denied/);
+    await db.exec(`select set_config('request.jwt.claim.sub','${alice}',false);`);
+    const tagDeleted=await write('tag-delete',tag,savedTag.revision);assert(tagDeleted.tag.deleted_at);
+    assert.equal((await list('','','',tag)).total,0);assert.equal((await list()).total,2);
+    saved=(await db.query('select * from public.words where id=$1',[word])).rows[0];
+    await db.exec('reset role');
+    await db.query(`insert into public.review_history(user_id,word_id,operation_id,occurred_at,algorithm,algorithm_version,schedule_snapshot,prior_stage,prior_interval,rating,new_stage,new_interval,next_review_at)
+      values($1,$2,$3,now(),'fixed',1,'{"intervals":[1,3,7,15,30],"repeat_days":30,"version":1}',0,1,'good',1,3,now()+interval '3 days')`,[alice,word,randomUUID()]);
+    await db.exec('set role authenticated');
+    await write('delete',word,saved.revision);assert.equal((await list()).total,1);
+    assert.equal((await db.query('select * from public.words where id=$1',[word])).rows[0].past_base,'كَتَبَ','soft delete preserves all data');
+    assert.equal((await db.query('select * from public.review_history where word_id=$1',[word])).rows.length,1,'learning history survives deletion');
+    await db.exec('reset role');
+    await db.query(`insert into public.words(user_id,arabic_word,normalized_arabic,bangla_meaning,english_meaning)
+      select $1,'كلمة '||n,'كلمة '||n,'শব্দ','word '||n from generate_series(1,1000) n`,[alice]);
+    await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${alice}',false);`);
+    const started=performance.now();const page1=await list(),page2=await list('','','',null,false,1);assert.equal(page1.total,1001);assert.equal(page1.words.length,25);assert.equal(page2.words.length,25);
+    await list('word 10');context.diagnostic(`1,001-word pagination and search: ${Math.round(performance.now()-started)} ms in local PostgreSQL`);
+    assert(!page2.words.some(w=>page1.words.some(a=>a.id===w.id)),'stable pagination');
+    assert.equal((await list("%' OR true --")).total,0,'search is literal and parameterized');
+    await db.exec('reset role;set role anon;');
+    await assert.rejects(list(),/permission denied/);await assert.rejects(write('save',randomUUID(),null,values),/permission denied/);
+    await db.exec('reset role');await db.exec(await readFile(new URL('../supabase/tests/vocabulary.sql',import.meta.url),'utf8'));
+    assert.equal((await db.query('select count(*)::int as count from auth.users')).rows[0].count,2,'audit rolls back all fixtures');
+  }finally{await db.close();}
+});

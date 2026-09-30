@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#245e4f">
+  <meta name="description" content="A calm space to build your Arabic vocabulary, one word at a time.">
+  <title>Dashboard · Arabic Journey</title>
+  <link rel="icon" href="./icons/app.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preload" href="./fonts/Lateef-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./css/app.css">
+  <link rel="stylesheet" href="./css/responsive.css">
+  <script defer src="./vendor/supabase.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="sidebar" aria-label="Application sidebar">
+    <a class="brand" href="#/dashboard"><img src="./icons/app.svg" alt="" width="40" height="40"><span>Arabic Journey<small>A little learning, every day.</small></span></a>
+    <div class="nav-caption">YOUR LEARNING SPACE</div>
+    <nav id="desktop-nav" aria-label="Main navigation"></nav>
+    <div class="sidebar-footer"><span class="small-mark" lang="ar" dir="rtl">ع</span><div>Your personal journey<small>One word at a time</small></div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <a class="mobile-brand" href="#/dashboard"><img src="./icons/app.svg" alt="" width="32" height="32"><span>Arabic Journey</span></a>
+      <div class="breadcrumb"><span>My learning space</span><span aria-hidden="true">/</span><strong id="breadcrumb-title">Dashboard</strong></div>
+      <div class="topbar-actions"><button id="language-toggle" class="language-toggle" type="button" aria-label="Switch to Bengali">বাংলা</button><a id="account-link" class="account-link" href="#/settings">Account</a><span id="connection-status" class="connection-status" role="status"></span><button class="icon-button" id="about-button" type="button" aria-label="About Arabic Journey"></button></div>
+    </header>
+    <div id="app-notice" class="app-notice" role="status" hidden></div>
+    <main id="main" tabindex="-1"></main>
+    <footer class="page-footer">Made for steady progress.<span lang="ar" dir="rtl" class="arabic">قَلِيلٌ دَائِمٌ</span></footer>
+  </div>
+  <nav class="bottom-nav" id="mobile-nav" aria-label="Mobile navigation"></nav>
+  <dialog id="app-dialog" class="modal" aria-labelledby="dialog-title"><div class="modal-top"><h2 id="dialog-title"></h2><button id="dialog-close" type="button" class="icon-button" aria-label="Close dialog"></button></div><div id="dialog-content"></div></dialog>
+  <noscript><div class="noscript">Enable JavaScript to navigate Arabic Journey.</div></noscript>
+</body>
+</html>
