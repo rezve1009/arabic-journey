@@ -88,6 +88,16 @@ The additive [Phase 5 migration](supabase/migrations/202609300004_fixed_srs.sql)
 
 See [Phase 5 tests and changed files](docs/phase-5-testing.md). Apply migrations 001 → 002 → 003 → 004 once each for a new project. The disposable UI test server now loads all four migrations.
 
-Recommended commit: `feat: add versioned fixed SRS and review history`
+## Online hosting
+
+Live site: https://rezve1009.github.io/arabic-journey/
+
+Repository: https://github.com/rezve1009/arabic-journey
+
+GitHub Pages uses the checked-in Actions workflow. Pushing `main` deploys only `index.html`, the manifest, CSS, fonts, icons, JavaScript and the bundled SDK. Tests, scripts, SQL, documentation and environment files are excluded from the hosted artifact. Browser configuration contains only the public Supabase publishable key; learner data remains behind Supabase authentication and owner RLS.
+
+Production authentication callback and Site URL: `https://rezve1009.github.io/arabic-journey/index.html`. The existing `http://localhost:5173/index.html` callback remains allowed for development. Open Settings, enter your email and open the emailed sign-in link in the same browser that requested it. Supabase's default sender is restricted to project organization members; public sign-up requires custom SMTP. Personal email delivery/session verification requires the account owner's inbox.
+
+Future updates: commit changes and run `git push origin main`; inspect the Deploy GitHub Pages workflow before assuming the live site has updated. Database migrations are separate and must be applied once, in order.
 
 Next prompt: **Implement Phase 6 only using the master specification and docs/architecture.md. Preserve Phases 1–5 and the English–Bengali toggle.**
