@@ -30,8 +30,11 @@ export function vocabularyPage(route) {
   const page = el('div',null,'page vocabulary-page');
   const token = ++mount;
   const heading = el('div',null,'page-heading');
-  const copy = el('div'); copy.append(el('p',t('YOUR COLLECTION'),'eyebrow'),el('h1',t(route.title)),el('p',t('Save a word today. Keep its meaning close.'),'page-description'));
+  const editing=route.id==='add-word'&&new URLSearchParams(location.hash.split('?')[1]||'').has('edit');
+  const copy = el('div'); copy.append(el('p',t('YOUR COLLECTION'),'eyebrow'),el('h1',t(editing?'Edit word':route.title)),el('p',t('Save a word today. Keep its meaning close.'),'page-description'));
   heading.append(copy);
+  if(route.id==='add-word')heading.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'));
+
   if (route.id !== 'add-word') {
     const add=link(t('Add a word'),'#/add-word','button button-primary');
     const symbol=el('span');symbol.innerHTML=icon('plus');add.prepend(symbol);
@@ -44,6 +47,7 @@ export function vocabularyPage(route) {
   }
   if (notice) { const message = el('div',t(notice),`feedback${failure?' is-error':''}`); message.setAttribute('role','status'); page.append(message); }
   const content = el('div'); page.append(content);
+  if(route.id!=='add-word'&&draft?.dirty){const kept=el('div',null,'draft-return');kept.append(el('p',t('Your unsaved edits are kept. Return to editing to save them.')),link(t('Continue editing'),editKey==='new'?'#/add-word':'#/add-word?edit='+editKey,'button button-secondary'));page.insertBefore(kept,content);}
   const params = new URLSearchParams(location.hash.split('?')[1] || '');
   if (params.has('tag')) {filters.tag=params.get('tag');filters.page=0;}
   queueMicrotask(async()=>{
@@ -55,9 +59,10 @@ export function vocabularyPage(route) {
       if (route.id === 'add-word') {
         const key = params.get('edit') || 'new';
         if (editKey !== key || !draft) {
-          if (draft && editKey && key !== editKey) {
+          if (draft?.dirty && editKey && key !== editKey) {
             // Keep an unsaved form when visiting another word until explicitly replaced.
             content.append(el('p',t('An unsaved draft is kept. Clear it to open another word.'),'feedback'));
+            content.append(link(t('Continue editing'),editKey==='new'?'#/add-word':'#/add-word?edit='+editKey,'button button-primary'));
             content.append(button('Clear draft',()=>confirmAction('Clear this draft?',()=>{draft=null;editKey=null;rerender();})));
             return;
           }
@@ -138,12 +143,15 @@ function wordCard(word) {
   if(word.needs_details)meta.append(el('span',t('Needs details'),'pill'));
   if(word.root?.length)card.append(userText('p',word.root.join(' — '),'ar'));
   meta.append(button(word.favorite?'Remove favorite':'Add favorite',()=>run(async()=>{await writeVocabulary({action:'favorite',id:word.id,revision:word.revision,values:{favorite:!word.favorite}});},'Favorite updated.')));
-  card.append(meta);card.addEventListener('click',event=>{if(!event.target.closest('a,button'))location.hash='#/vocabulary?word='+word.id;});return card;
+  card.append(meta);const actions=el('div',null,'word-card-actions');actions.append(link(t('View details'),'#/vocabulary?word='+word.id,'button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(actions);card.addEventListener('click',event=>{if(!event.target.closest('a,button'))location.hash='#/vocabulary?word='+word.id;});return card;
 }
 function editor() {
-  const form=el('form',null,'card word-editor');
+  const form=el('form',null,'card word-editor');form.id='word-editor-form';
+  const top=el('div',null,'editor-top-actions');
+  top.append(link(t(draft.revision?'Back to word':'Back to vocabulary'),draft.revision?'#/vocabulary?word='+draft.id:'#/vocabulary','button button-secondary'));
+  const topSave=el('button',t(busy?'Saving…':draft.revision?'Save changes':'Save word'),'button button-primary');topSave.type='submit';topSave.disabled=busy;top.append(topSave);form.append(top);
   const modes=el('div',null,'vocabulary-actions');
-  for(const [value,label]of[['quick','Quick Add'],['full','Full Add']]){const node=button(label,()=>{draft.mode=value;rerender();});node.setAttribute('aria-pressed',String(draft.mode===value));modes.append(node);}
+  for(const [value,label]of(draft.revision?[]:[['quick','Quick Add'],['full','Full Add']])){const node=button(label,()=>{draft.mode=value;rerender();});node.setAttribute('aria-pressed',String(draft.mode===value));modes.append(node);}
   form.append(modes,el('p',t('Arabic, Bengali and English are required. Quick Add marks a word as needing details.'),'settings-help'));
   const fields=draft.mode==='quick'?['arabic_word','bangla_meaning','english_meaning']:basic.filter(name=>!['favorite','needs_details'].includes(name));
   const grid=el('div',null,'word-fields');
@@ -175,7 +183,7 @@ function editor() {
   form.append(selected,link(t('Manage tags / decks'),'#/tags'));
   const actions=el('div',null,'vocabulary-actions');
   const submit=el('button',t(busy?'Saving…':draft.revision?'Save changes':'Save word'),'button button-primary');submit.type='submit';submit.disabled=busy;
-  actions.append(submit,button('Clear draft',()=>confirmAction('Clear this draft?',()=>{draft=null;editKey=null;location.hash='#/add-word';rerender();})));
+  actions.append(submit,link(t(draft.revision?'Back to word':'Back to vocabulary'),draft.revision?'#/vocabulary?word='+draft.id:'#/vocabulary','button button-secondary'),button(draft.revision?'Discard changes':'Clear draft',()=>confirmAction(draft.revision?'Discard your unsaved changes?':'Clear this draft?',()=>{const destination=draft.revision?'#/vocabulary?word='+draft.id:'#/add-word';draft=null;editKey=null;location.hash=destination;rerender();})));
   if(draft.revision||failure)actions.append(link(t('Open latest word'),'#/vocabulary?word='+draft.id),button('Use latest version',()=>confirmAction('Replace this draft with the latest saved version?',()=>run(async()=>{const latest=await getWord(draft.id);draft={...hydrateMorphology(latest),mode:'full'};}))));
   form.append(actions);
   form.addEventListener('submit',event=>{event.preventDefault();if(!busy&&form.reportValidity())saveDraft(false);});return form;
@@ -210,7 +218,7 @@ function duplicateDialog(matches) {
   const actions=el('div',null,'vocabulary-actions');actions.append(button('Add Anyway',()=>{document.getElementById('app-dialog').close();saveDraft(true);}),button('Cancel',()=>document.getElementById('app-dialog').close()));content.append(actions);showModal(t('Possible duplicate'),content);
 }
 function details(word) {
-  const card=el('article',null,'card word-details');card.append(link(t('Back to vocabulary'),'#/vocabulary'),userText('h2',word.arabic_word,'ar'));
+  const card=el('article',null,'card word-details');const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));
   const list=el('dl',null,'word-detail-list');
   for(const name of basic.filter(name=>!['arabic_word','favorite','needs_details'].includes(name))){if(!word[name])continue;list.append(el('dt',t(labels[name])),name==='word_type'?el('dd',t(word[name])):userText('dd',word[name],name.includes('arabic')?'ar':name.includes('bangla')?'bn':undefined));}
   list.append(el('dt',t('Tags / Decks')),userText('dd',tags.filter(tag=>word.tags.includes(tag.id)).map(tag=>tag.name).join(' · ')||t('None')));

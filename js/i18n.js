@@ -259,6 +259,7 @@ Object.assign(bn,{
 });
 
 Object.assign(bn,{"The email service has reached its sending limit. Check your latest email instead of requesting more. If no retry time is supplied, wait up to one hour. More email capacity requires custom SMTP.":"ইমেইল পাঠানোর সীমা শেষ হয়েছে। নতুন অনুরোধ না করে সর্বশেষ ইমেইল দেখুন। সার্ভার সময় না জানালে এক ঘণ্টা পর্যন্ত অপেক্ষা করুন। বেশি ইমেইল পাঠাতে custom SMTP লাগবে।","Please wait for the countdown before trying again.":"আবার চেষ্টা করার আগে কাউন্টডাউন শেষ হওয়া পর্যন্ত অপেক্ষা করুন।","A sign-in request is already in progress. Please wait.":"একটি লগইন অনুরোধ চলছে। অপেক্ষা করুন।","Email limit reached. Retry in {time}. This is a retry estimate, not a guaranteed reset time.":"ইমেইলের সীমা শেষ। {time} পরে আবার চেষ্টা করুন। এটি আনুমানিক অপেক্ষার সময়; সার্ভারের সীমা শেষ হওয়ার নিশ্চয়তা নয়।","Retry in {time}.":"{time} পরে আবার চেষ্টা করুন।","Please wait":"অপেক্ষা করুন"});
+Object.assign(bn,{"Continue editing":"সম্পাদনা চালিয়ে যান","Your unsaved edits are kept. Return to editing to save them.":"আপনার অসংরক্ষিত পরিবর্তন রাখা আছে। সংরক্ষণ করতে সম্পাদনায় ফিরে যান।","View details":"বিস্তারিত দেখুন","Add details":"বিস্তারিত যোগ করুন","Back to word":"শব্দে ফিরে যান","Discard changes":"পরিবর্তন বাতিল করুন","Discard your unsaved changes?":"আপনার অসংরক্ষিত পরিবর্তন বাতিল করবেন?"});
 let language = 'en';
 try { language = localStorage.getItem('arabic-journey.language') === 'bn' ? 'bn' : 'en'; } catch { /* Browsing still works without storage. */ }
 const originals = new WeakMap();
