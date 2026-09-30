@@ -1,3 +1,4 @@
+import {authRetry,retryAfterSeconds} from './auth-retry.js';
 import { supabaseConfig } from './config.js';
 import { getLanguage, setLanguage } from './i18n.js';
 
@@ -47,13 +48,19 @@ export async function configure(config) {
   await initializeSupabase();
 }
 
+const authRetryHeaders=new Map();
+function authError(error,path){const until=authRetryHeaders.get(path);if(error?.status===429&&until>Date.now())error.retryAfterSeconds=Math.ceil((until-Date.now())/1000);return error;}
 async function timedFetch(input, options = {}) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   options.signal?.addEventListener('abort', abort, { once: true });
   if (options.signal?.aborted) abort();
   const timeout = setTimeout(abort, 15000);
-  try { return await fetch(input, { ...options, signal: controller.signal }); }
+  try { const response=await fetch(input,{...options,signal:controller.signal});
+    const url=new URL(typeof input==='string'?input:input.url);
+    if(url.pathname.startsWith('/auth/v1/')){authRetryHeaders.delete(url.pathname);if(response.status===429){const seconds=retryAfterSeconds(response.headers.get('Retry-After'));if(seconds)authRetryHeaders.set(url.pathname,Date.now()+seconds*1000);}}
+    return response;
+  }
   finally { clearTimeout(timeout); options.signal?.removeEventListener('abort', abort); }
 }
 export async function initializeSupabase() {
@@ -152,22 +159,24 @@ export function vocabularyClient() {
   return requireClient();
 }
 export async function sendCode(email) {
+  return authRetry.run('email',async()=>{
   const emailRedirectTo = new URL('index.html',location.href).href.split(/[?#]/)[0];
   const { error } = await requireClient().auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo } });
-  if (error) throw error;
+  if (error) throw authError(error,'/auth/v1/otp');
+  },{emailOnSuccess:true});
 }
 export async function verifyCode(email, token) {
-  const result = await requireClient().auth.verifyOtp({ email, token, type: 'email' });
+  const result = await authRetry.run('request',async()=>{const result=await requireClient().auth.verifyOtp({email,token,type:'email'});if(result.error)throw authError(result.error,'/auth/v1/verify');return result;});
   if (result.error) throw result.error;
   await loadAccount(result.data.user);
 }
 export async function signInPassword(email,password) {
- const {data,error}=await requireClient().auth.signInWithPassword({email,password});
+ const {data,error}=await authRetry.run('request',async()=>{const result=await requireClient().auth.signInWithPassword({email,password});if(result.error)throw authError(result.error,'/auth/v1/token');return result;});
  if(error)throw error;await loadAccount(data.user);
 }
 export async function signUpPassword(email,password) {
  const emailRedirectTo=new URL('index.html',location.href).href.split(/[?#]/)[0];
- const {data,error}=await requireClient().auth.signUp({email,password,options:{emailRedirectTo}});
+ const {data,error}=await authRetry.run('email',async()=>{const result=await requireClient().auth.signUp({email,password,options:{emailRedirectTo}});if(result.error)throw authError(result.error,'/auth/v1/signup');return result;},{emailOnSuccess:true});
  if(error)throw error;if(data.session)await loadAccount(data.user);return Boolean(data.session);
 }
 export async function setAccountPassword(password) {
@@ -232,6 +241,9 @@ export async function saveArabicDisplay(values,revision) {
 
 export function errorMessage(error) {
   const code = error?.code || error?.message;
+  if(code==='over_email_send_rate_limit')return 'The email service has reached its sending limit. Check your latest email instead of requesting more. If no retry time is supplied, wait up to one hour. More email capacity requires custom SMTP.';
+  if(code==='auth_cooldown')return 'Please wait for the countdown before trying again.';
+  if(code==='auth_in_progress')return 'A sign-in request is already in progress. Please wait.';
   if(code==='invalid_credentials')return 'Email or password is incorrect. If you used an email link before, sign in with Email link and then set a password.';
   if(code==='email_not_confirmed')return 'Confirm your email first. Check your inbox and spam folder, or request a new email link.';
   if(code==='weak_password')return 'Choose a stronger password with at least 8 characters.';
