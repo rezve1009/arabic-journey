@@ -1,7 +1,7 @@
 
 # Phases 6–14 release candidate — 2026-10-01 (Asia/Dhaka)
 
-Status: backend deployed on 2026-10-01; frontend release in progress. Phases 1–5 are preserved. Final real browser/device QA remains outstanding. Browser control currently fails before opening a tab with a Windows sandbox setup-refresh error. The automated DOM tests below are not a replacement for screenshots, real browsers, or physical Android/iPhone testing.
+Status: backend and frontend deployed on 2026-10-01. Phases 1–5 are preserved. Final real browser/device QA remains outstanding. Browser control currently fails before opening a tab with a Windows sandbox setup-refresh error. The automated DOM tests below are not a replacement for screenshots, real browsers, or physical Android/iPhone testing.
 
 ## Implemented
 
@@ -35,3 +35,7 @@ Covered: previous auth/rate/CRUD/morphology/fixed-SRS regression suite; authored
 ## Latest local result
 
 npm test: 19 passed, 0 failed. Runtime/script syntax checks and git diff --check passed. The disposable HTTP fixture returned owned timezone-aware statistics successfully. Live migrations 005–012 succeeded. A transactional live audit verified authored quiz eligibility, owner statistics, cross-user RLS and denied authenticated access to reminder jobs, then rolled back all temporary users/data. The original two words remain and no audit accounts remain. The reminder endpoint returned 401 without its secret and 200 with it (zero jobs). The once-per-minute cron is active, and public push configuration is enabled. Actual device push delivery and physical device/browser UI checks remain unverified.
+
+## Live release verification
+
+GitHub Pages run [36853242739](https://github.com/rezve1009/arabic-journey/actions/runs/36853242739) completed successfully for commit 6c79985. The hosted review/quiz modules, manifest and worker returned HTTP 200; worker cache is arabic-journey-d1e9e16893ed. Cron completed successful runs and its HTTP responses returned 200 without timeouts. These transport/server checks do not claim successful real-device notification delivery or browser UI QA.
