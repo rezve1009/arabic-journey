@@ -1,3 +1,4 @@
+import {audio}from './learning-ui.js';
 import { getAccount, subscribeAccount } from './supabase.js';
 import { t, getLanguage } from './i18n.js';
 import { emptyState, showModal, icon } from './ui.js';
@@ -41,7 +42,7 @@ export function vocabularyPage(route) {
     add.setAttribute('aria-label',t('Add a word'));heading.append(add);
   }
   page.append(heading);
-  if (account.status !== 'ready') {
+  if (!['ready','offline'].includes(account.status)) {
     page.append(emptyState({title:t(account.status === 'loading' ? 'Connecting…' : 'Sign in to use your vocabulary'),description:t('Your words are stored privately in your account.'),link:'#/settings',label:t('Open Settings')}));
     return page;
   }
@@ -218,7 +219,7 @@ function duplicateDialog(matches) {
   const actions=el('div',null,'vocabulary-actions');actions.append(button('Add Anyway',()=>{document.getElementById('app-dialog').close();saveDraft(true);}),button('Cancel',()=>document.getElementById('app-dialog').close()));content.append(actions);showModal(t('Possible duplicate'),content);
 }
 function details(word) {
-  const card=el('article',null,'card word-details');const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));
+  const card=el('article',null,'card word-details');const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));if(word.example_arabic)card.append(audio(word.example_arabic));}
   const list=el('dl',null,'word-detail-list');
   for(const name of basic.filter(name=>!['arabic_word','favorite','needs_details'].includes(name))){if(!word[name])continue;list.append(el('dt',t(labels[name])),name==='word_type'?el('dd',t(word[name])):userText('dd',word[name],name.includes('arabic')?'ar':name.includes('bangla')?'bn':undefined));}
   list.append(el('dt',t('Tags / Decks')),userText('dd',tags.filter(tag=>word.tags.includes(tag.id)).map(tag=>tag.name).join(' · ')||t('None')));

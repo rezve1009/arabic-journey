@@ -1,3 +1,5 @@
+import {cloudWrite,offlineList,cachedWord} from './sync.js';
+import {getCache} from './storage.js';
 import { vocabularyClient, getAccount, errorMessage } from './supabase.js';
 
 export async function vocabularyRequest(work) {
@@ -9,6 +11,7 @@ export async function vocabularyRequest(work) {
   return data;
 }
 export function listWords(filters = {}) {
+  if(!navigator.onLine)return offlineList(filters);
   return vocabularyRequest(client => client.rpc('vocabulary_list', {
     p_search: filters.search || '', p_type: filters.type || '', p_status: filters.status || '',
     p_tag: filters.tag || null, p_favorite: !!filters.favorite,
@@ -18,6 +21,7 @@ export function listWords(filters = {}) {
   }));
 }
 export async function listTags() {
+  if(!navigator.onLine)return(await getCache(getAccount().user.id,'tags')).filter(t=>!t.deleted_at);
   const tags = [];
   for (let offset = 0; ; offset += 1000) {
     const batch = await vocabularyRequest(client => client.from('tags').select('id,name,kind,revision')
@@ -27,6 +31,7 @@ export async function listTags() {
   }
 }
 export async function getWord(id) {
+  if(!navigator.onLine)return cachedWord(id);
   const [word, links] = await Promise.all([
     vocabularyRequest(client => client.from('words').select('*').eq('id',id).is('deleted_at',null).single()),
     vocabularyRequest(client => client.from('word_tags').select('tag_id').eq('word_id',id).is('deleted_at',null)),
@@ -34,10 +39,10 @@ export async function getWord(id) {
   return { ...word, tags: links.map(link=>link.tag_id) };
 }
 export function writeVocabulary({ operation = crypto.randomUUID(), action, id, revision = null, values = {}, tags = [], allowDuplicate = false }) {
-  return vocabularyRequest(client => client.rpc('vocabulary_write', {
+  return cloudWrite('vocabulary_write', {
     p_operation:operation,p_action:action,p_id:id,p_revision:revision,p_values:values,
     p_tags:tags,p_allow_duplicate:allowDuplicate,
-  }));
+  });
 }
 export function vocabularyError(error) {
   if(error?.message==='invalid_root')return 'Enter exactly 3 or 4 Arabic root letters.';

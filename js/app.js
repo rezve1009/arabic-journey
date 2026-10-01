@@ -1,3 +1,10 @@
+import {backupPage}from './backup.js';
+import {initializePwa} from './pwa.js';
+import {initializeSync,syncStatus} from './sync.js';
+import {progressPage} from './progress.js';
+import {statisticsPage} from './statistics.js';
+import {quizPage,setQuizRenderer} from './quiz.js';
+import {reviewPage,setReviewRenderer,unmountReview} from './review.js';
 import { routes, startRouter, currentRoute } from './router.js';
 import { icon, initializeModal, showModal } from './ui.js';
 import { dashboard } from './pages/dashboard.js';
@@ -55,7 +62,7 @@ about.addEventListener('click', () => {
   const description = document.createElement('p');
   description.textContent = t('A calm space to learn Arabic, one word at a time. Save, organize and find your vocabulary.');
   const detail = document.createElement('p');
-  detail.textContent = 'Cloud storage, reviews, quizzes, offline access, installation, and reminders will be added in the planned development phases.';
+  detail.textContent = 'Save your vocabulary, practice recall, and keep learning with a regular review schedule.';
   const link = document.createElement('a');
   link.href = './docs/architecture.md';
   link.className = 'text-link';
@@ -63,7 +70,7 @@ about.addEventListener('click', () => {
   const languages = document.createElement('p');
   languages.className = 'language-sample';
   languages.innerHTML = '<span lang="ar" dir="rtl">كَلِمَةٌ</span><span lang="bn" dir="ltr">শব্দ</span><span>Word</span>';
-  body.append(description, detail, languages, link);
+  body.append(description, detail, languages);
   translate(body);
   showModal(t('About Arabic Journey'), body);
 });
@@ -73,10 +80,10 @@ function updateConnectivity() {
   const status = document.getElementById('connection-status');
   status.classList.toggle('is-offline', !navigator.onLine);
   const account = getAccount();
-  const label = !navigator.onLine ? 'Offline' : ({ ready:'Cloud ready', loading:'Connecting…', error:'Connection error', 'signed-out':'Signed out', unconfigured:'Not connected' }[account.status]);
+  const label = account.user ? syncStatus() : !navigator.onLine ? 'Offline' : ({ ready:'Cloud ready', loading:'Connecting…', error:'Connection error', 'signed-out':'Signed out', unconfigured:'Not connected' }[account.status]);
   status.textContent = t(label);
   status.setAttribute('aria-label',t(label));
-  status.title = t('Browser connectivity only; learning-data sync arrives in Phase 10.');
+  status.title=t(syncStatus());
   document.getElementById('account-link').textContent = t(account.user ? 'Signed in' : 'Sign in');
   document.getElementById('account-link').href=account.user?'#/settings':'#/login';
 }
@@ -88,8 +95,9 @@ let initialNavigation = true;
 function renderRoute(route, navigate = false) {
   document.body.classList.toggle('login-layout',route.id==='login');
   unmountVocabulary();
+  unmountReview();
   if (document.getElementById('app-dialog').open) document.getElementById('app-dialog').close();
-  const page = route.id === 'login' ? loginPage() : route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
+  const page = route.id === 'login' ? loginPage() : route.id==='import-export'?backupPage():['weak-words','mastered'].includes(route.id) ? progressPage(route) : ['statistics','history'].includes(route.id) ? statisticsPage(route) : route.id === 'quiz' ? quizPage() : route.id === 'review' ? reviewPage() : route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
   translate(page);
   document.getElementById('main').replaceChildren(page);
   document.getElementById('breadcrumb-title').textContent = t(route.title);
@@ -106,6 +114,8 @@ function renderRoute(route, navigate = false) {
   initialNavigation = false;
 }
 
+setQuizRenderer(()=>{if(currentRoute()?.id==='quiz')renderRoute(currentRoute());});
+setReviewRenderer(()=>{if(currentRoute()?.id==='review')renderRoute(currentRoute());});
 setLoginRenderer(()=>{if(currentRoute()?.id==='login')renderRoute(currentRoute());});
 setSettingsRenderer(() => {
   if (currentRoute()?.id === 'settings') renderRoute(currentRoute());
@@ -141,6 +151,8 @@ function showNotice(message) {
   notice.textContent = t(message);
   notice.hidden = !message;
 }
+window.addEventListener('learningrefresh',()=>renderRoute(currentRoute()||routes[0]));
+window.addEventListener('pwa-ready',()=>{if(currentRoute()?.id==='settings')renderRoute(currentRoute());});
 window.addEventListener('languagechange',()=>{
   translateShell();
   renderRoute(currentRoute() || routes[0]);
@@ -148,8 +160,11 @@ window.addEventListener('languagechange',()=>{
 });
 subscribeAccount(()=>{
   updateConnectivity();
-  if (['login','settings','vocabulary','add-word','favorites','tags','dashboard'].includes(currentRoute()?.id)) renderRoute(currentRoute());
+  if (['weak-words','mastered','statistics','history','quiz','review','login','settings','vocabulary','add-word','favorites','tags','dashboard'].includes(currentRoute()?.id)) renderRoute(currentRoute());
 });
+initializeSync();
+initializePwa().catch(()=>{});
+window.addEventListener('syncstatus',updateConnectivity);
 translateShell();
 renderRoute(currentRoute() || routes[0]);
 // Let the SDK exchange PKCE email callbacks before the hash router can redirect.

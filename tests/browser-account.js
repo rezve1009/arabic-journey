@@ -1,3 +1,4 @@
+import {cacheAccount,cachedAccount,rememberActive}from '../js/storage.js';
 // Loaded only by scripts/test-vocabulary-server.mjs on port 5174.
 const account={status:'loading',user:{id:'11111111-1111-4111-8111-111111111111',email:'disposable@example.test'},profile:{display_name:'Test account',revision:1},settings:{ui_language:'en',timezone:'Asia/Dhaka',revision:1}};
 export const getAccount=()=>account;
@@ -11,7 +12,7 @@ export const configure=async()=>{};
 export const sendCode=async()=>{};
 export const verifyCode=async()=>{};
 export const signOut=async()=>{};
-export const loadAccount=async()=>{const result=await request({table:'user_settings',filters:[],start:0,end:0,single:true});if(result.error)throw new Error(result.error.message);account.settings=result.data;account.status='ready';publish();};
+export const loadAccount=async()=>{if(!navigator.onLine){const cached=await cachedAccount(account.user.id);if(!cached)throw new Error('Not cached');account.settings=cached.settings;account.profile=cached.profile;account.status='offline';publish();return;}const result=await request({table:'user_settings',filters:[],start:0,end:0,single:true});if(result.error)throw new Error(result.error.message);account.settings=result.data;account.status='ready';await cacheAccount(account.user,account.profile,account.settings);await rememberActive(account.user,account.profile,account.settings);publish();};
 export const saveArabicDisplay=async(values,revision)=>{const result=await request({rpc:'save_arabic_display',args:{p_revision:revision,p_harakah_mode:values.harakah_mode,p_font_size:values.arabic_font_size,p_future_prefix:values.future_prefix}});if(result.error)throw new Error(result.error.message);account.settings=result.data;publish();return result.data;};
 export const saveFixedSchedule=async(values,revision)=>{const result=await request({rpc:'save_fixed_schedule',args:{p_revision:revision,p_intervals:values.intervals,p_repeat_days:values.repeat_days,p_ratings:values.ratings}});if(result.error)throw result.error;account.settings=result.data;publish();return result.data;};
 export const savePreferences=async()=>{};

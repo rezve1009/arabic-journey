@@ -1,3 +1,4 @@
+import {cacheAccount,cachedAccount,clearOwner,allStore,activeAccount,rememberActive} from './storage.js';
 import {authRetry,retryAfterSeconds} from './auth-retry.js';
 import { supabaseConfig } from './config.js';
 import { getLanguage, setLanguage } from './i18n.js';
@@ -88,6 +89,7 @@ export async function initializeSupabase() {
       setTimeout(() => {
         if (activeClient !== client) return;
         if ((initializationFailed || state.status === 'error') && event === 'INITIAL_SESSION') return;
+        if(!navigator.onLine&&state.status==='offline'&&!session)return;
         if (!session) {
           ++generation;
           publish({ status: 'signed-out', user: null, profile: null, settings: null, error: null });
@@ -97,6 +99,7 @@ export async function initializeSupabase() {
       }, 0);
     });
     subscription = data.subscription;
+    if(!navigator.onLine){const cached=await activeAccount();if(cached){if(activeClient!==client)return;publish({status:'offline',user:cached.user,profile:cached.profile,settings:cached.settings,error:null});setLanguage(cached.settings.ui_language,{notify:false});window.dispatchEvent(new Event('languagechange'));return;}}
     const initialized = await activeClient.auth.initialize();
     if (initialized.error) { initializationFailed = true; throw initialized.error; }
     const result = await activeClient.auth.getSession();
@@ -135,6 +138,7 @@ export async function loadAccount(user = state.user) {
   const activeClient = client;
   publish({ status: 'loading', user, profile: null, settings: null, error: null });
   try {
+    if(!navigator.onLine){const cached=await cachedAccount(user.id);if(!cached)throw new Error('offline');if(token!==generation)return;publish({status:'offline',user,profile:cached.profile,settings:cached.settings,error:null});return;}
     const [profile, settings] = await Promise.all([
       activeClient.from('profiles').select('*').eq('user_id',user.id).single(),
       activeClient.from('user_settings').select('*').eq('user_id',user.id).single(),
@@ -142,6 +146,8 @@ export async function loadAccount(user = state.user) {
     if (profile.error || settings.error) throw profile.error || settings.error;
     if (token !== generation || activeClient !== client) return;
     setLanguage(settings.data.ui_language, { notify: false });
+    await cacheAccount(user,profile.data,settings.data).catch(()=>{});
+    await rememberActive(user,profile.data,settings.data).catch(()=>{});
     publish({ status: 'ready', user, profile: profile.data, settings: settings.data, error: null });
     window.dispatchEvent(new Event('languagechange'));
   } catch (error) {
@@ -155,7 +161,7 @@ function requireClient() {
   return client;
 }
 export function vocabularyClient() {
-  if (state.status !== 'ready' || !state.user) throw new Error('session_expired');
+  if (!['ready','offline'].includes(state.status) || !state.user) throw new Error('session_expired');
   return requireClient();
 }
 export async function sendCode(email) {
@@ -183,8 +189,10 @@ export async function setAccountPassword(password) {
  const {error}=await requireClient().auth.updateUser({password});if(error)throw error;
 }
 export async function signOut() {
-  const { error } = await requireClient().auth.signOut({ scope: 'local' });
+  const uid=state.user?.id;if(uid&&(await allStore('outbox',uid)).length)throw new Error('pending_sync');
+  const { error } = await client.auth.signOut({ scope: 'local' });
   if (error) throw error;
+  if(uid)await clearOwner(uid);
   ++generation;
   publish({ status: 'signed-out', user: null, profile: null, settings: null, error: null });
 }
@@ -253,6 +261,7 @@ export function errorMessage(error) {
   if(error?.name==='AuthPKCEGrantCodeExchangeError'||['pkce_verifier_invalid','validation_failed'].includes(code))return 'Open the newest email link in the browser where you requested it. You can also paste the link on the sign-in page.';
   if(['unexpected_failure','unexpected_failure_database'].includes(code)||/database error/i.test(error?.message||''))return 'The account service could not finish this request. Please retry; if it continues, the site owner needs to check authentication logs.';
 
+  if(code==='pending_sync')return 'Sync or export pending changes before signing out.';
   if(code==='invalid_srs')return 'Use 1–30 stages of 1–3650 whole days and valid rating behavior.';
   if(code==='missing_srs')return 'Apply the Phase 5 database migration to save the fixed schedule.';
   if(code==='invalid_display')return 'Check Harakah mode, font size and future prefix.';
@@ -273,3 +282,5 @@ export function errorMessage(error) {
   if (error?.name === 'AbortError' || error?.name === 'AuthRetryableFetchError' || error instanceof TypeError || code === 'sdk_unavailable') return 'Could not reach Supabase. Check the project connection and try again.';
   return 'Something went wrong. Your changes were not saved. Please try again.';
 }
+
+if(typeof window!=='undefined')window.addEventListener('online',()=>{if(state.user&&state.status==='offline')loadAccount();});

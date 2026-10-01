@@ -153,3 +153,12 @@ Schema design anticipates all phases; implementation does not cross phase bounda
 - Supabase RLS: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Apple Web Push platform requirements: https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers
 - MDN Push API: https://developer.mozilla.org/en-US/docs/Web/API/Push_API
+
+
+## Phases 6–14 release candidate (2026-10-01)
+
+The user authorized the remaining phases together. Feature modules now implement review, authored-data quiz, evidence/mastery, statistics, IndexedDB/outbox, PWA, push server and backup. Existing phase 1–5 RPCs and Arabic morphology are retained. New migrations 005–012 are additive; full restore is a separate explicitly confirmed transaction and is never run by a migration.
+
+Quiz sessions persist server-generated question/answer snapshots, and quiz completion recomputes correctness on the server. Evidence counters update through triggers on transactional reviews/quiz answers; changing mastery preferences re-evaluates classification without changing due dates. Statistics use the account's IANA timezone. IndexedDB partitions by owner, preserves operation UUIDs and explicit revision conflicts, and archives versions when the learner chooses a resolution. Cache refresh is paginated and coalesced; a shared worker caches only static application assets. There is no service-role, VAPID private or cron secret in runtime files.
+
+These changes are a locally tested release candidate, not a completed live rollout. The production project remains at Phase 5 until new migrations, server configuration, real browser/device QA and hosting verification pass. See [testing and limitations](remaining-phases-testing.md) and [push deployment](push-deployment.md).

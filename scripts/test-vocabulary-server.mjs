@@ -1,15 +1,15 @@
 // Disposable UI test backend. Never deploy or use this adapter with real credentials.
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile,readdir } from 'node:fs/promises';
 import { resolve,extname } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 const db=new PGlite();const root=resolve(import.meta.dirname,'..');
 await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);
   create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
   grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
-for(const file of ['202609300001_foundation.sql','202609300002_vocabulary.sql','202609300003_morphology.sql','202609300004_fixed_srs.sql'])await db.exec(await readFile(resolve(root,'supabase/migrations',file),'utf8'));
+for(const file of (await readdir(resolve(root,'supabase/migrations'))).filter(file=>file.endsWith('.sql')).sort())await db.exec(await readFile(resolve(root,'supabase/migrations',file),'utf8'));
 await db.exec(`insert into auth.users(id) values('11111111-1111-4111-8111-111111111111');set role authenticated;select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);`);
-const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.ttf':'font/ttf','.webmanifest':'application/manifest+json'};
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ttf':'font/ttf','.webmanifest':'application/manifest+json'};
 http.createServer(async(req,res)=>{
   if(req.url==='/__test-api'&&req.method==='POST'){
     let body='';for await(const chunk of req)body+=chunk;
@@ -21,13 +21,14 @@ http.createServer(async(req,res)=>{
       else if(q.rpc==='save_fixed_schedule'){const a=q.args;data=(await db.query('select public.save_fixed_schedule($1,$2,$3,$4) result',[a.p_revision,a.p_intervals,a.p_repeat_days,JSON.stringify(a.p_ratings)])).rows[0].result;}
       else if(q.rpc==='fixed_due')data=(await db.query('select public.fixed_due($1) result',[q.args.p_page])).rows[0].result;
       else if(q.rpc==='fixed_review'){const a=q.args;data=(await db.query('select public.fixed_review($1,$2,$3,$4,$5,$6) result',[a.p_operation,a.p_word,a.p_revision,a.p_rating,a.p_response_ms,a.p_mode])).rows[0].result;}
+      else if(['quiz_start','quiz_finish','save_learning_settings','progress_words','learning_statistics','learning_history','sync_snapshot','backup_export','backup_restore','complete_onboarding','push_save'].includes(q.rpc)){const entries=Object.entries(q.args||{});if(entries.some(([k])=>!/^p_[a-z_]+$/.test(k)))throw new Error('Invalid fixture argument');data=(await db.query('select public.'+q.rpc+'('+entries.map(([k],i)=>k+'=> $'+(i+1)).join(',')+') result',entries.map(([,v])=>v&&typeof v==='object'&&!Array.isArray(v)?JSON.stringify(v):v))).rows[0].result;}
       else{
-        if(!['words','tags','word_tags','user_settings','word_review_state','review_history'].includes(q.table))throw new Error('Unsupported fixture table');
+        if(!['words','tags','word_tags','user_settings','word_review_state','review_history','quiz_sessions','quiz_answers','study_sessions','profiles','push_configuration'].includes(q.table))throw new Error('Unsupported fixture table');
         const values=[];const clauses=q.filters.map(([key,value])=>{
           if(!['id','word_id','deleted_at','user_id','algorithm'].includes(key))throw new Error('Unsupported filter');
           if(value===null)return `${key} is null`;values.push(value);return `${key}=$${values.length}`;
         });
-        const sort={tags:'name,id',words:'created_at desc,id',user_settings:'user_id',word_tags:'tag_id',word_review_state:'word_id',review_history:'occurred_at desc,id desc'}[q.table];
+        const sort={tags:'name,id',words:'created_at desc,id',user_settings:'user_id',word_tags:'tag_id',word_review_state:'word_id',review_history:'occurred_at desc,id desc'}[q.table]||'id';
         const result=await db.query(`select * from public.${q.table} ${clauses.length?'where '+clauses.join(' and '):''} order by ${sort} limit ${Math.min(1000,q.end-q.start+1)} offset ${Math.max(0,q.start)}`,values);
         data=q.single?result.rows[0]:result.rows;if(q.single&&!data){res.end(JSON.stringify({error:{code:'PGRST116'}}));return;}
       }

@@ -1,0 +1,356 @@
+import { readStore, atomic } from "./storage.js";
+import { getAccount, subscribeAccount } from "./supabase.js";
+import { vocabularyRequest } from "./vocabulary-data.js";
+import { normalizeArabic, displayArabic, pronouns } from "./arabic-utils.js";
+import {
+  node,
+  content,
+  action,
+  link,
+  shell,
+  ready,
+  finish,
+  message,
+  field,
+} from "./learning-ui.js";
+export const quizTypes = [
+  "arabic_bangla",
+  "arabic_english",
+  "bangla_arabic",
+  "english_arabic",
+  "arabic_typing",
+  "root",
+  "masdar",
+  "verb_form",
+  "conjugation",
+  "fill_blank",
+  "multiple_choice",
+  "true_false",
+];
+export const compareAnswer = (answer, answers) =>
+  answers.some(
+    (expected) =>
+      normalizeArabic(answer).trim().toLocaleLowerCase() ===
+      normalizeArabic(expected).trim().toLocaleLowerCase(),
+  );
+let quiz = null,
+  owner = null,
+  render = () => {},
+  busy = false,
+  startOp = null;
+subscribeAccount((account) => {
+  if (owner && owner !== account.user?.id) {
+    quiz = null;
+    owner = null;
+    startOp = null;
+  }
+});
+async function keepQuiz() {
+  if (!quiz || !owner) return;
+  const saved = structuredClone(quiz);
+  delete saved.saving;
+  await atomic(["meta"], (tx) =>
+    tx
+      .objectStore("meta")
+      .put({ key: owner + ":active-quiz", owner, quiz: saved }),
+  );
+}
+window.addEventListener("learningreset", () => {
+  quiz = null;
+  startOp = null;
+});
+export function setQuizRenderer(fn) {
+  render = fn;
+}
+export function quizPage() {
+  const page = shell("Daily Quiz");
+  if (!ready(page)) return finish(page);
+  const account = getAccount();
+  if (owner !== account.user.id) {
+    owner = account.user.id;
+    quiz = null;
+    startOp = null;
+  }
+  const card = node("section", "", "card study-card");
+  page.append(card);
+  if (!quiz) {
+    queueMicrotask(async () => {
+      const uid = owner;
+      const draft = await readStore("meta", uid + ":active-quiz");
+      if (
+        draft?.quiz &&
+        !draft.quiz.saved &&
+        uid === getAccount().user?.id &&
+        page.isConnected &&
+        !quiz
+      ) {
+        quiz = { ...draft.quiz, at: performance.now(), saving: false };
+        render();
+      }
+    });
+    const prefs = account.settings.quiz_options;
+    const count = field("Question count", "number", prefs.question_count);
+    count.input.min = 1;
+    count.input.max = 100;
+    const types = node("fieldset");
+    types.append(node("legend", "Question types"));
+    for (const type of quizTypes) {
+      const wrap = node("label"),
+        box = node("input");
+      box.type = "checkbox";
+      box.value = type;
+      box.checked = prefs.types.includes(type);
+      wrap.append(box, node("span", type.replaceAll("_", " ")));
+      types.append(wrap);
+    }
+    const weak = field("Weak word percentage", "number", prefs.weak_percentage);
+    weak.input.min = 0;
+    weak.input.max = 100;
+    const newWords = field("Include new words", "checkbox");
+    newWords.input.checked = prefs.include_new;
+    const mastered = field("Include mastered words", "checkbox");
+    mastered.input.checked = prefs.include_mastered;
+    card.append(
+      count.wrap,
+      types,
+      weak.wrap,
+      newWords.wrap,
+      mastered.wrap,
+      action(
+        "Start Quiz",
+        async () => {
+          if (busy) return;
+          const selected = [...types.querySelectorAll("input:checked")].map(
+            (x) => x.value,
+          );
+          if (
+            !selected.length ||
+            !count.input.reportValidity() ||
+            !weak.input.reportValidity()
+          )
+            return;
+          busy = true;
+          startOp ??= crypto.randomUUID();
+          try {
+            const result = await vocabularyRequest((c) =>
+              c.rpc("quiz_start", {
+                p_operation: startOp,
+                p_count: Number(count.input.value),
+                p_types: selected,
+                p_weak: Number(weak.input.value),
+                p_new: newWords.input.checked,
+                p_mastered: mastered.input.checked,
+              }),
+            );
+            if (owner !== getAccount().user?.id) return;
+            if (result.empty) {
+              card.append(
+                node(
+                  "p",
+                  "No eligible questions. Add words or enable more question types.",
+                ),
+              );
+              startOp = null;
+            } else {
+              quiz = {
+                ...result,
+                index: 0,
+                answers: [],
+                at: performance.now(),
+                submitted: false,
+                finishOp: crypto.randomUUID(),
+              };
+              await keepQuiz();
+              render();
+            }
+          } catch (e) {
+            message(card, e);
+          } finally {
+            busy = false;
+          }
+        },
+        true,
+      ),
+    );
+    return finish(page);
+  }
+  if (quiz.index >= quiz.questions.length) {
+    card.append(
+      node("h2", "Quiz complete"),
+      content(
+        "p",
+        (quiz.saved
+          ? quiz.score
+          : quiz.answers.filter((a) => a.correct).length) +
+          " / " +
+          quiz.questions.length,
+      ),
+    );
+    for (const a of quiz.answers.filter((a) => !a.correct)) {
+      const q = quiz.questions.find((q) => q.id === a.id);
+      const block = node("div", "", "quiz-mistake");
+      block.append(
+        content("h3", q.prompt),
+        content("p", a.answer),
+        content("p", q.answers.join(" / ")),
+      );
+      card.append(block);
+    }
+    if (!quiz.saved) {
+      card.append(action("Save results", () => save(card), true));
+      if (!quiz.submitted) queueMicrotask(() => save(card));
+    } else
+      card.append(
+        node("p", "Results saved."),
+        action("New quiz", () => {
+          quiz = null;
+          startOp = null;
+          render();
+        }),
+        link("Review weak words", "#/weak-words"),
+      );
+    return finish(page);
+  }
+  const q = quiz.questions[quiz.index];
+  card.append(
+    content("p", quiz.index + 1 + " / " + quiz.questions.length),
+    node("p", q.type.replaceAll("_", " ")),
+  );
+  if (q.pronoun)
+    card.append(
+      content(
+        "p",
+        (pronouns.find((p) => p.id === q.pronoun)?.arabic || q.pronoun) +
+          " · " +
+          q.tense,
+      ),
+    );
+  const prompt = content(
+    "h2",
+    displayArabic(q.prompt, {
+      mode: account.settings.harakah_mode,
+      quiz: true,
+      revealed: false,
+    }),
+    "quiz-prompt",
+  );
+  if (/[ء-ي]/.test(q.prompt)) {
+    prompt.lang = "ar";
+    prompt.dir = "rtl";
+  }
+  card.append(prompt);
+  const submit = async (answer) => {
+    if (busy) return;
+    busy = true;
+    const active = quiz;
+    try {
+      const next = {
+        ...active,
+        answers: [
+          ...active.answers,
+          {
+            id: q.id,
+            answer,
+            response_ms: Math.min(
+              2147483647,
+              Math.round(performance.now() - active.at),
+            ),
+            correct: compareAnswer(answer, q.answers),
+          },
+        ],
+        index: active.index + 1,
+        at: performance.now(),
+      };
+      await atomic(["meta"], (tx) =>
+        tx
+          .objectStore("meta")
+          .put({
+            key: owner + ":active-quiz",
+            owner,
+            quiz: structuredClone(next),
+          }),
+      );
+      if (quiz === active && owner === getAccount().user?.id) {
+        quiz = next;
+        render();
+      }
+    } catch (e) {
+      message(card, e);
+    } finally {
+      busy = false;
+    }
+  };
+  if (q.type === "multiple_choice" && q.choices?.length >= 2) {
+    for (const choice of [...q.choices].sort(() => Math.random() - 0.5)) {
+      const btn = action(choice, () => submit(choice));
+      btn.textContent = choice;
+      btn.dataset.noTranslate = "";
+      card.append(btn);
+    }
+  } else if (q.type === "true_false") {
+    card.append(
+      action("True", () => submit("true")),
+      action("False", () => submit("false")),
+    );
+  } else {
+    const form = node("form", "", "settings-form"),
+      answer = field("Your answer");
+    answer.input.required = true;
+    answer.input.autocomplete = "off";
+    if (
+      [
+        "bangla_arabic",
+        "english_arabic",
+        "arabic_typing",
+        "root",
+        "masdar",
+        "conjugation",
+        "fill_blank",
+      ].includes(q.type)
+    ) {
+      answer.input.dir = "rtl";
+      answer.input.lang = "ar";
+    }
+    const btn = node("button", "Submit answer", "button button-primary");
+    btn.type = "submit";
+    form.append(answer.wrap, btn);
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (form.reportValidity()) submit(answer.input.value);
+    });
+    card.append(form);
+    queueMicrotask(() => {
+      if (page.isConnected) answer.input.focus();
+    });
+  }
+  return finish(page);
+}
+async function save(card) {
+  if (quiz.saving) return;
+  const active = quiz;
+  active.saving = true;
+  active.submitted = true;
+  try {
+    const result = await vocabularyRequest((c) =>
+      c.rpc("quiz_finish", {
+        p_operation: active.finishOp,
+        p_session: active.id,
+        p_answers: active.answers.map(({ id, answer, response_ms }) => ({
+          id,
+          answer,
+          response_ms,
+        })),
+      }),
+    );
+    if (active !== quiz || getAccount().user?.id !== owner) return;
+    active.saved = true;
+    await keepQuiz();
+    active.score = result.score;
+    await keepQuiz();
+    render();
+  } catch (e) {
+    if (card.isConnected) message(card, e);
+  } finally {
+    active.saving = false;
+  }
+}

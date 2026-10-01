@@ -1,3 +1,6 @@
+import {notificationSettings}from './notifications.js';
+import {pwaSettings} from './pwa.js';
+import {learningSettings,syncSettings} from './learning-settings.js';
 import { getAccount, getPublicConfig, configure, sendCode, verifyCode, signOut, loadAccount, savePreferences, saveArabicDisplay, saveFixedSchedule, errorMessage } from './supabase.js';
 import {scheduleForm,acknowledgeScheduleRevision} from './srs-settings.js';
 import { getLanguage, t, translate } from './i18n.js';
@@ -100,12 +103,16 @@ export function settingsPage() {
   if(account.status==='ready')arabicSection.append(arabicDisplayForm());
   else {const help=document.createElement('p');help.className='settings-help';help.textContent='Sign in to save Arabic display preferences.';arabicSection.append(help);}
   page.querySelector('.settings-grid').append(arabicSection);
-  const scheduleSection=document.createElement('section');scheduleSection.className='card settings-card';scheduleSection.append(Object.assign(document.createElement('h2'),{textContent:t('Fixed review schedule')}));
+  const scheduleSection=document.createElement('section');scheduleSection.className='card settings-card';scheduleSection.id='schedule-section';scheduleSection.append(Object.assign(document.createElement('h2'),{textContent:t('Fixed review schedule')}));
   if(account.status==='ready')scheduleSection.append(scheduleForm({save:async(values,revision)=>{await saveFixedSchedule(values,revision);acknowledgeLanguagePreference();},run,reload:loadAccount}));
   else scheduleSection.append(Object.assign(document.createElement('p'),{textContent:t('Sign in to edit your fixed schedule.')}));
   page.querySelector('.settings-grid').append(scheduleSection);
   for(const term of page.querySelectorAll('#learning-section dt'))if(term.textContent==='Revision'){term.nextElementSibling.remove();term.remove();}
   for(const term of page.querySelectorAll('#learning-section dt'))if(term.textContent==='Arabic Display'){term.nextElementSibling.remove();term.remove();}
+  page.querySelector('#learning-section').remove();
+  page.querySelector('.settings-grid').append(pwaSettings());
+  if(account.status==='ready')page.querySelector('.settings-grid').append(learningSettings(),notificationSettings());
+  if(account.user)page.querySelector('.settings-grid').append(syncSettings());
   if (notice) {
     const message = document.createElement('p');
     message.className = `feedback ${noticeError ? 'is-error' : ''}`;
@@ -114,6 +121,7 @@ export function settingsPage() {
     page.querySelector('.page-heading').after(message);
   }
   if (busy) page.querySelectorAll('button,input,select').forEach(control => control.disabled = true);
+  const section=new URLSearchParams(location.hash.split('?')[1]||'').get('section');if(['notifications','schedule'].includes(section))queueMicrotask(()=>page.querySelector('#'+section+'-section')?.scrollIntoView({block:'start'}));
   translate(page);
   return page;
 }

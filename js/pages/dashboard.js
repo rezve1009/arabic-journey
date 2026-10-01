@@ -1,3 +1,5 @@
+import {onboarding}from '../onboarding.js';
+import {statisticsData,streaks} from '../statistics.js';
 import { emptyState, icon } from '../ui.js';
 import { getLanguage, t } from '../i18n.js';
 import { getAccount } from '../supabase.js';
@@ -30,18 +32,19 @@ export function dashboard() {
   page.querySelector('.foundation-note p').textContent = t('Reviews and learning statistics arrive in later phases.');
   const metrics=page.querySelectorAll('.metric-value');
   for(const index of [0,2])metrics[index].textContent='—';
-  page.querySelector('.hero-progress strong').textContent=t('Phase 6');
+  page.querySelector('.hero-progress strong').textContent='—';
   for(const row of [...page.querySelectorAll('.summary-row')].slice(0,4))row.querySelector('strong').textContent='—';
   page.querySelector('.streak-card p strong').textContent='—';page.querySelector('.streak-bottom strong').textContent='—';
   const total=page.querySelector('.collection-total strong'),favorite=page.querySelector('.summary-row:last-child strong');
   total.textContent='—';favorite.textContent='—';metrics[1].textContent='—';
   const account=getAccount();
+  const setup=onboarding();if(setup)page.querySelector('.page-heading').after(setup);
   if(account.status!=='ready')page.querySelector('#recent-empty').replaceChildren(emptyState({title:t('Sign in to see your collection.'),description:t('Your words are stored privately in your account.'),link:'#/settings',label:t('Open Settings')}));
   else queueMicrotask(async()=>{
     try{
       const [collection,favorites,newWords,due]=await Promise.all([listWords(),listWords({favorite:true}),listWords({status:'new'}),getDueWords().catch(()=>null)]);
       if(!page.isConnected||getAccount().user?.id!==account.user.id)return;
-      total.textContent=collection.total;favorite.textContent=favorites.total;metrics[1].textContent=newWords.total;
+      total.textContent=collection.total;favorite.textContent=favorites.total;
       metrics[0].textContent=due?due.total:'—';
       const upcoming=page.querySelector('#upcoming-empty');upcoming.replaceChildren();
       if(!due)upcoming.append(emptyState({symbol:'review',title:t('Review schedule could not be loaded.'),description:t('Retry')}));
@@ -59,6 +62,8 @@ export function dashboard() {
       }
     }catch{if(page.isConnected)page.querySelector('#recent-empty').replaceChildren(emptyState({title:t('Collection could not be loaded. Retry from Vocabulary.'),description:t('Your words are stored privately in your account.'),link:'#/vocabulary',label:t('View vocabulary')}));}
   });
+
+  if(account.status==='ready')queueMicrotask(async()=>{try{const data=await statisticsData();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;const st=streaks(data.calendar,data.today,data.goals.minimum_activity||1);metrics[1].textContent=data.new_today;metrics[2].textContent=data.reviewed_today;metrics[3].textContent=data.quiz_today+' / '+data.goals.quiz_questions;page.querySelector('.hero-progress strong').textContent=data.reviewed_today+' / '+(data.goals.reviews??(data.reviewed_today+data.due));const progress=page.querySelector('.hero-progress progress');progress.max=Math.max(1,data.goals.reviews??(data.reviewed_today+data.due));progress.value=data.reviewed_today;const rows=page.querySelectorAll('.summary-row strong');[data.learning,data.reviewing,data.mastered,data.weak,data.favorites].forEach((v,i)=>rows[i].textContent=v);page.querySelector('.streak-card p strong').textContent=st.current;page.querySelector('.streak-bottom strong').textContent=st.longest;page.querySelector('.foundation-note p').textContent='';const activity=page.querySelector('#activity-empty');activity.replaceChildren();for(const day of data.calendar.slice(-5).reverse()){const row=document.createElement('p');row.textContent=day.study_day+' · '+day.n;activity.append(row);}}catch{}});
   return page;
 }
 

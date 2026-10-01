@@ -26,7 +26,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir _site
-          cp index.html manifest.webmanifest _site/
+          cp index.html manifest.webmanifest service-worker.js _site/
           cp -R css fonts icons js vendor _site/
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3

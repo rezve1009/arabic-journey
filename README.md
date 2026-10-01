@@ -109,3 +109,8 @@ Open `#/login` for email/password sign-in, confirmed-email registration, or emai
 Authentication wrappers, error guidance and trusted-link validation have automated tests using a fake provider. Actual password authentication and inbox confirmation require the account owner and have not been claimed as tested.
 
 Login rate limits: email-link sending and signup share a 60-second resend cooldown. Provider email-quota errors create a conservative one-hour retry deadline when no Retry-After header is supplied; general request throttling falls back to five minutes. The UI displays a countdown, preserves deadlines across reloads, and blocks duplicate in-flight calls. Only deadline/reason metadata is stored. The configured default SMTP quota cannot be increased without custom SMTP, so this UI does not claim to reset or bypass the provider quota. Existing emailed links remain usable through the paste-link form while sending is paused.
+
+
+## Remaining phases release candidate
+
+Phases 6–13 implementations and Phase 14 automated checks are available on the working release branch. The current live site still serves phases 1–5. New database migrations, push configuration, real browser/device QA and release deployment must be completed before calling this Version 1 finished. See [release testing](docs/remaining-phases-testing.md) and [push deployment](docs/push-deployment.md). Run npm test and npm run prepare:pwa before release.
