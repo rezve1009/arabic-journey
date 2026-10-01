@@ -1,7 +1,7 @@
 
-# Push deployment (server setup pending)
+# Push deployment
 
-This project uses dedicated Supabase project xtjtpkklmabtookelhrz. Frontend hosting stays on GitHub Pages. The existing live release is phases 1–5; do not deploy the new frontend before its new migrations.
+This project uses dedicated Supabase project xtjtpkklmabtookelhrz. Frontend hosting stays on GitHub Pages. Migrations 005–012 and the reminders Edge Function/Vault/cron were deployed on 2026-10-01. Keep stable generated credentials in ignored supabase/.env.push. Actual subscription/device delivery is still unverified. The procedure below documents setup and maintenance; do not replay already applied migrations.
 
 1. Apply new SQL migrations 202610010005 through 202610010012, in order. Each transaction is additive and does not execute backup restore. Keep the old migration files unchanged. Existing SQL-Editor migrations may not be in Supabase CLI migration history: do not blindly run db push against that project.
 2. Authenticate the official Supabase CLI on the owner's device. No access token, service-role key or private key should be pasted into chat.

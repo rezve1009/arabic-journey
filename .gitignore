@@ -7,3 +7,5 @@ node_modules/
 docs/*.jpg
 docs/*.png
 _site/
+
+supabase/.temp/

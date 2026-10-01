@@ -100,7 +100,7 @@ Production authentication callback and Site URL: `https://rezve1009.github.io/ar
 
 Future updates: commit changes and run `git push origin main`; inspect the Deploy GitHub Pages workflow before assuming the live site has updated. Database migrations are separate and must be applied once, in order.
 
-Next prompt: **Implement Phase 6 only using the master specification and docs/architecture.md. Preserve Phases 1–5 and the English–Bengali toggle.**
+Release checks and remaining manual verification are recorded in docs/remaining-phases-testing.md.
 
 ## Dedicated sign-in page
 
@@ -113,4 +113,4 @@ Login rate limits: email-link sending and signup share a 60-second resend cooldo
 
 ## Remaining phases release candidate
 
-Phases 6–13 implementations and Phase 14 automated checks are available on the working release branch. The current live site still serves phases 1–5. New database migrations, push configuration, real browser/device QA and release deployment must be completed before calling this Version 1 finished. See [release testing](docs/remaining-phases-testing.md) and [push deployment](docs/push-deployment.md). Run npm test and npm run prepare:pwa before release.
+Phases 6–13 implementations and Phase 14 automated checks are ready for the live release. Production additive migrations, reminder Edge Function, Vault/cron and public push configuration were deployed on 2026-10-01. The live two-user rollback audit passed, existing words were retained, and all 19 automated tests passed. Real browser/device QA and actual push delivery remain unverified because browser control cannot start; Version 1 final QA is still open. See [release testing](docs/remaining-phases-testing.md) and [push deployment](docs/push-deployment.md). Run npm test and npm run prepare:pwa before release.
