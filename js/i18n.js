@@ -304,3 +304,5 @@ export function translate(root) {
     }
   }
 }
+
+Object.assign(bn,{"MCQ only":"শুধু MCQ","MCQ (Multiple choice)":"MCQ (বহুনির্বাচনী)","Use saved question types":"সংরক্ষিত প্রশ্নের ধরন ব্যবহার করুন","MCQ is selected by default. Add at least two words with different English meanings; up to four options come from your vocabulary.":"প্রথমে MCQ বেছে দেওয়া আছে। আলাদা ইংরেজি অর্থের অন্তত দুটি শব্দ যোগ করুন; আপনার শব্দভান্ডার থেকে সর্বোচ্চ চারটি অপশন আসবে।","MCQ needs at least two words with different English meanings. Add more words, then start again.":"MCQ-এর জন্য আলাদা ইংরেজি অর্থের অন্তত দুটি শব্দ দরকার। আরও শব্দ যোগ করে আবার শুরু করুন।"});

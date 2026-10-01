@@ -1225,3 +1225,6 @@ html[lang=bn] .brand small{font-size:10px}
 .onboarding{margin:0 0 24px}.onboarding ol{display:flex;flex-wrap:wrap;gap:18px;padding-left:20px}.sync-operation{border-top:1px solid var(--border);padding:16px 0}.sync-operation pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.learning-page textarea{min-height:160px;width:100%}
 
 .conflict-versions{display:grid;grid-template-columns:1fr 1fr;gap:18px}.conflict-versions section{padding:12px;background:var(--primary-soft);border-radius:10px}@media(max-width:600px){.conflict-versions{grid-template-columns:1fr}}
+
+.mcq-options { display: grid; gap: .75rem; margin-block: 1rem; }
+.mcq-options .button { text-align: start; white-space: normal; min-height: 48px; }

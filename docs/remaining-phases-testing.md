@@ -39,3 +39,6 @@ npm test: 19 passed, 0 failed. Runtime/script syntax checks and git diff --check
 ## Live release verification
 
 GitHub Pages run [36853242739](https://github.com/rezve1009/arabic-journey/actions/runs/36853242739) completed successfully for commit 6c79985. The hosted review/quiz modules, manifest and worker returned HTTP 200; worker cache is arabic-journey-d1e9e16893ed. Cron completed successful runs and its HTTP responses returned 200 without timeouts. These transport/server checks do not claim successful real-device notification delivery or browser UI QA.
+## MCQ update — 2026-10-01
+
+Quiz now selects multiple_choice by default, offers MCQ-only and saved-type presets, and renders stable A–D clickable options. Additive migration 013 excludes MCQs without a distinct nonempty authored English distractor instead of silently displaying a typing question. Options are sampled and shuffled once in the stored server snapshot; existing sessions keep their saved questions. Two distinct meanings provide two options, up to four unique meanings provide four. The full suite passed 20 tests, and the extended mounted UI test confirmed button answers advance and save the correct score. Live rollback audit verified one-word ineligibility and two-word MCQs without retaining test users or vocabulary. Browser screenshot and physical-device QA remain unavailable.

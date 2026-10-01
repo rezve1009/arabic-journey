@@ -99,8 +99,8 @@ export function quizPage() {
         box = node("input");
       box.type = "checkbox";
       box.value = type;
-      box.checked = prefs.types.includes(type);
-      wrap.append(box, node("span", type.replaceAll("_", " ")));
+      box.checked = type === "multiple_choice";
+      wrap.append(box, node("span", type === "multiple_choice" ? "MCQ (Multiple choice)" : type.replaceAll("_", " ")));
       types.append(wrap);
     }
     const weak = field("Weak word percentage", "number", prefs.weak_percentage);
@@ -112,6 +112,9 @@ export function quizPage() {
     mastered.input.checked = prefs.include_mastered;
     card.append(
       count.wrap,
+      action("MCQ only", () => { for (const box of types.querySelectorAll("input")) box.checked = box.value === "multiple_choice"; }),
+      action("Use saved question types", () => { for (const box of types.querySelectorAll("input")) box.checked = prefs.types.includes(box.value); }),
+      node("p", "MCQ is selected by default. Add at least two words with different English meanings; up to four options come from your vocabulary."),
       types,
       weak.wrap,
       newWords.wrap,
@@ -147,7 +150,7 @@ export function quizPage() {
               card.append(
                 node(
                   "p",
-                  "No eligible questions. Add words or enable more question types.",
+                  selected.length === 1 && selected[0] === "multiple_choice" ? "MCQ needs at least two words with different English meanings. Add more words, then start again." : "No eligible questions. Add words or enable more question types.",
                 ),
               );
               startOp = null;
@@ -281,12 +284,14 @@ export function quizPage() {
     }
   };
   if (q.type === "multiple_choice" && q.choices?.length >= 2) {
-    for (const choice of [...q.choices].sort(() => Math.random() - 0.5)) {
+    const options = node("div", "", "mcq-options");
+    for (const [index, choice] of q.choices.entries()) {
       const btn = action(choice, () => submit(choice));
-      btn.textContent = choice;
+      btn.textContent = String.fromCharCode(65 + index) + ". " + choice;
       btn.dataset.noTranslate = "";
-      card.append(btn);
+      options.append(btn);
     }
+    card.append(options);
   } else if (q.type === "true_false") {
     card.append(
       action("True", () => submit("true")),

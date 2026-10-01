@@ -196,6 +196,8 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     const mountQuiz = () => document.body.replaceChildren(quizPage());
     setQuizRenderer(mountQuiz);
     mountQuiz();
+    assert.deepEqual([...document.querySelectorAll("fieldset input:checked")].map(x=>x.value), ["multiple_choice"]);
+    button("Use saved question types").click();
     button("Start Quiz").click();
     await wait(() => button("Submit answer"));
     while (button("Submit answer")) {
@@ -250,6 +252,22 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
         .rows[0].n,
       2,
     );
+    await db.query("select public.vocabulary_write($1,'save',$2,null,$3)", [randomUUID(),randomUUID(),JSON.stringify({arabic_word:'قَلَمٌ',english_meaning:'pen',bangla_meaning:'কলম',word_type:'noun'})]);
+    mountQuiz();
+    button('New quiz').click();
+    button('Start Quiz').click();
+    await wait(()=>document.querySelector('.mcq-options'));
+    while(document.querySelector('.mcq-options')){
+      const options=document.querySelector('.mcq-options');
+      assert.equal(options.querySelectorAll('button').length,2);
+      assert.equal(button('Submit answer'),undefined);
+      const prompt=document.querySelector('.quiz-prompt').textContent;
+      const answer=prompt==='كَتَبَ'?'wrote':'pen';
+      [...options.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+answer)).click();
+      await wait(()=>!options.isConnected);
+    }
+    await wait(()=>document.body.textContent.includes('Results saved.'));
+    assert(document.body.textContent.includes('2 / 2'));
   } finally {
     await db.close();
   }
