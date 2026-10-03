@@ -52,6 +52,7 @@ export function vocabularyPage(route) {
   const content = el('div'); page.append(content);
   if(route.id!=='add-word'&&draft?.dirty){const kept=el('div',null,'draft-return');kept.append(el('p',t('Your unsaved edits are kept. Return to editing to save them.')),link(t('Continue editing'),editKey==='new'?'#/add-word':'#/add-word?edit='+editKey,'button button-secondary'));page.insertBefore(kept,content);}
   const params = new URLSearchParams(location.hash.split('?')[1] || '');
+  if (params.has('status')&&!params.has('word')){Object.assign(filters,filterDefaults,{status:params.get('status')});}
   if (params.has('tag')) {filters.tag=params.get('tag');filters.page=0;}
   queueMicrotask(async()=>{
     try {
@@ -120,7 +121,7 @@ function collection(content,favorites,token) {
   const changed=()=>{filters.page=0;refresh();};
   search.addEventListener('input',()=>{filters.search=search.value;clearTimeout(timer);timer=setTimeout(changed,250);});
   toolbar.addEventListener('submit',event=>{event.preventDefault();clearTimeout(timer);changed();});
-  toolbar.append(search,choices([['','All types'],...types.map(type=>[type,type])],filters.type,value=>{filters.type=value;changed();},'Word type'),choices([['','All words'],['needs-details','Needs details'],['new','New words']],filters.status,value=>{filters.status=value;changed();},'Word status'),choices([['','All tags / decks'],...tagOptions()],filters.tag,value=>{filters.tag=value;changed();},'Tags / Decks'));
+  toolbar.append(search,choices([['','All types'],...types.map(type=>[type,type])],filters.type,value=>{filters.type=value;changed();},'Word type'),choices([['','All words'],['needs-details','Needs details'],['new','New words'],['today','Added today'],['learning','Learning'],['reviewing','Reviewing']],filters.status,value=>{filters.status=value;changed();},'Word status'),choices([['','All tags / decks'],...tagOptions()],filters.tag,value=>{filters.tag=value;changed();},'Tags / Decks'));
   if(!favorites){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!filters.favorite;input.addEventListener('change',()=>{filters.favorite=input.checked;changed();});label.append(input,el('span',t('Favorites only')));toolbar.append(label);}
   const rootLabel=el('label',t('Root filter'));const root=el('input');root.lang='ar';root.dir='rtl';root.value=filters.root;root.placeholder=t('ك ت ب or د ح ر ج');root.maxLength=40;root.addEventListener('input',()=>{filters.root=root.value;clearTimeout(timer);timer=setTimeout(changed,250);});rootLabel.append(root);toolbar.append(rootLabel);
   const searchOptions=el('fieldset',null,'search-options');searchOptions.append(el('legend',t('Search comparison')));
@@ -128,8 +129,8 @@ function collection(content,favorites,token) {
   for(const [name,label] of [['from','Added from (UTC)'],['to','Added through (UTC)']]) {
     const wrapper=el('label',t(label));const input=el('input');input.type='date';input.value=filters[name];input.addEventListener('change',()=>{filters[name]=input.value;changed();});wrapper.append(input);toolbar.append(wrapper);
   }
-  toolbar.append(button('Clear filters',()=>{Object.assign(filters,filterDefaults);if(location.hash.includes('?tag='))location.hash='#/vocabulary';else rerender();}));
-  content.append(toolbar,el('p',t('Review and weak/mastered filters arrive with their planned phases.'),'settings-help'),result);refresh();
+  toolbar.append(button('Clear filters',()=>{Object.assign(filters,filterDefaults);if(location.hash.includes('?'))location.hash='#/vocabulary';else rerender();}));
+  content.append(toolbar,result);refresh();
   content.append(button('Add demo words',()=>confirmAction('Add three demo words to your account?',()=>run(async()=>{
     if(!demoRequests.length)demoRequests=[
       {arabic_word:'كَتَبَ',bangla_meaning:'সে লিখেছে',english_meaning:'he wrote',word_type:'verb'},

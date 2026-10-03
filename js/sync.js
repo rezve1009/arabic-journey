@@ -378,9 +378,12 @@ export async function offlineList(filters = {}) {
         (!filters.type || w.word_type === filters.type) &&
         (!filters.favorite || w.favorite) &&
         (!filters.status ||
-          (filters.status === "needs_details" && w.needs_details) ||
+          (["needs_details","needs-details"].includes(filters.status) && w.needs_details) ||
           (filters.status === "new" &&
-            !states.find((s) => s.word_id === w.id)?.review_count)) &&
+            !states.find((s) => s.word_id === w.id)?.review_count) ||
+          (filters.status==='learning' && ['new','learning'].includes(states.find(s=>s.word_id===w.id&&!s.deleted_at)?.mastery_status)) ||
+          (filters.status==='reviewing' && states.find(s=>s.word_id===w.id&&!s.deleted_at)?.mastery_status==='reviewing') ||
+          (filters.status==='today' && localDate(w.created_at,getAccount().settings.timezone)===localDate(new Date(),getAccount().settings.timezone))) &&
         (!filters.tag ||
           (
             w.tags ||
@@ -566,3 +569,5 @@ export function initializeSync() {
     if (e.data?.type === "sync") synchronize();
   });
 }
+
+function localDate(value,timezone='UTC'){return new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value));}

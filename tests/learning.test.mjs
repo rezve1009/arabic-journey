@@ -146,9 +146,17 @@ test("Learning migrations: eligible authored quiz, server scoring, retries and o
         .total,
       quiz.questions.length,
     );
-    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
-      bob,
+    assert.equal((await db.query("select public.activity_history() result")).rows[0].result.total,quiz.questions.length+1);
+    assert.equal((await db.query("select public.activity_history(p_kind=>'word') result")).rows[0].result.total,1);
+    assert.equal((await db.query("select public.activity_history(p_from=>'1900-01-01',p_to=>'1900-01-02') result")).rows[0].result.total,0);
+    assert.equal((await db.query("select public.vocabulary_list(p_status=>'today') result")).rows[0].result.total,1);
+    assert.equal((await db.query("select public.vocabulary_list(p_status=>'reviewing') result")).rows[0].result.total,stats.reviewing);
+    assert.equal((await db.query("select public.vocabulary_list(p_status=>'learning') result")).rows[0].result.total,stats.learning);
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [bob,
     ]);
+    assert.equal((await db.query("select public.activity_history() result")).rows[0].result.total,0);
+    assert.equal((await db.query("select public.vocabulary_list(p_status=>'today') result")).rows[0].result.total,0);
+
     assert.equal(
       (await db.query("select * from public.quiz_sessions")).rows.length,
       0,

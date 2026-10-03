@@ -42,12 +42,17 @@ test("Offline durable writes, dependent edits, reviews, isolation and atomic rol
       bangla_meaning: "লিখেছে",
       english_meaning: "wrote",
       word_type: "verb",
+      needs_details:true,
     },
     p_tags: [],
     p_allow_duplicate: false,
   });
   assert(result.queued);
   assert.equal((await offlineList()).total, 1);
+  assert.equal((await offlineList({status:'today'})).total,1);
+  assert.equal((await offlineList({status:'learning'})).total,1);
+  assert.equal((await offlineList({status:'reviewing'})).total,0);
+  assert.equal((await offlineList({status:'needs-details'})).total,1);
   assert.equal((await pendingOperations()).length, 1);
   let word = await cachedWord(id);
   await queueWrite("vocabulary_write", {

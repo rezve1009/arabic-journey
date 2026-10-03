@@ -286,6 +286,20 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     }
     await wait(()=>document.body.textContent.includes('Results saved.'));
     assert(document.body.textContent.includes('2 / 2'));
+    const {dashboard}=await import('../js/pages/dashboard.js');
+    const stats=(await db.query('select public.learning_statistics() result')).rows[0].result;
+    document.body.replaceChildren(dashboard());
+    await wait(()=>document.querySelectorAll('.activity-bar').length===7);
+    assert.equal(document.querySelectorAll('.metric-value')[3].textContent,stats.quiz_today+' / '+stats.goals.quiz_questions);
+    assert.equal(document.querySelector('.metric-link:last-child').getAttribute('href'),'#/quiz');
+    assert.equal(document.querySelector('.summary-row').getAttribute('href'),'#/vocabulary?status=learning');
+    assert(!document.body.textContent.includes('No quiz yet'));
+    const todayBar=document.querySelector('[aria-current=date]');
+    location.hash=todayBar.getAttribute('href');
+    document.body.replaceChildren(statisticsPage({id:'history',title:'History'}));
+    await wait(()=>document.querySelector('.history-row'));
+    assert.equal(document.querySelector('input[type=date]').value,stats.today);
+    assert(document.body.textContent.includes('Added word'));
     const {initializePwa,pwaSettings}=await import('../js/pwa.js');
     const posted=[],registration={waiting:{postMessage:m=>posted.push(m)},addEventListener:()=>{},update:async()=>{}};
     let registrationOptions;

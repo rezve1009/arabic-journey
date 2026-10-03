@@ -1,3 +1,4 @@
+import {activityChart} from '../dashboard-activity.js';
 import {onboarding}from '../onboarding.js';
 import {statisticsData,streaks} from '../statistics.js';
 import { emptyState, icon } from '../ui.js';
@@ -15,7 +16,7 @@ export function dashboard() {
     <div class="dashboard-grid"><div class="dashboard-main">
       <section class="review-hero card" aria-labelledby="today-title"><div class="hero-copy"><span class="pill">${icon('sprout')} A fresh start</span><h2 id="today-title">Small steps.<br>Stronger vocabulary.</h2><p>Your daily review will bring the right words back<br class="desktop-break"> at the right time.</p><a href="#/review" class="button button-primary">Start today's review ${icon('arrow')}</a><div class="hero-progress"><div><span>Today's review progress</span><strong>0 / 0 reviewed</strong></div><progress value="0" max="1" aria-label="Today's review progress: no words yet"></progress></div></div><div class="hero-art" aria-hidden="true"><div class="arabic-ring"><span lang="ar" dir="rtl">ع</span></div><span class="art-label">ONE WORD AT A TIME</span><span class="art-leaf leaf-one"></span><span class="art-leaf leaf-two"></span></div></section>
       <section aria-labelledby="today-overview"><div class="section-heading"><h2 id="today-overview">Today at a glance</h2><span class="muted" id="today-date"></span></div><div class="metric-grid">
-        ${metric('review', 'Words due', '0', 'Ready when you are')}${metric('sprout', 'New words', '0', 'A fresh beginning')}${metric('mastered', 'Reviewed today', '0', 'Every review counts')}${metric('quiz', 'Daily quiz', '—', 'No quiz yet')}
+        ${metric('review', 'Words due', '0', 'Ready when you are')}${metric('sprout', 'New words', '0', 'A fresh beginning')}${metric('mastered', 'Reviewed today', '0', 'Every review counts')}${metric('quiz', 'Quiz questions today', '—', 'Loading…')}
       </div></section>
       <section class="card recent-card" aria-labelledby="recent-title"><div class="card-heading"><h2 id="recent-title">Recently added</h2><a class="text-link" href="#/vocabulary">View vocabulary ${icon('chevron')}</a></div><div id="recent-empty"></div></section>
       <div class="lower-grid"><section class="card" aria-labelledby="upcoming-title"><div class="card-heading"><h2 id="upcoming-title">Upcoming reviews</h2>${icon('history', 'muted')}</div><div id="upcoming-empty"></div></section><section class="card" aria-labelledby="activity-title"><div class="card-heading"><h2 id="activity-title">Recent activity</h2>${icon('chart', 'muted')}</div><div id="activity-empty"></div></section></div>
@@ -23,13 +24,12 @@ export function dashboard() {
       <section class="card collection-card"><div class="card-heading"><h2>Your collection</h2>${icon('book', 'muted')}</div><div class="collection-total"><strong>0</strong><span>words and counting</span></div><div class="collection-list">${summary('sprout', 'Learning', '0')}${summary('review', 'Reviewing', '0')}${summary('mastered', 'Mastered', '0')}${summary('weak', 'Weak words', '0')}${summary('heart', 'Favorites', '0')}</div><a class="button button-secondary full-width" href="#/vocabulary">Explore vocabulary ${icon('arrow')}</a></section>
       <section class="card streak-card"><span class="streak-icon">${icon('flame')}</span><div><h2>Every day matters</h2><p><strong>0</strong> day streak</p></div><div class="streak-bottom"><span>Longest streak</span><strong>0 days</strong></div></section>
       <section class="quiet-note"><span class="arabic" lang="ar" dir="rtl">رِحْلَةُ الأَلْفِ مِيلٍ<br>تَبْدَأُ بِخُطْوَةٍ</span><p>A journey of a thousand miles<br>begins with a single step.</p><span class="note-line"></span></section>
-      <div class="foundation-note">${icon('info')}<p>You're exploring the foundation.<br>Word saving arrives in Phase 3.</p></div>
+
     </aside></div>`;
   page.querySelector('#today-date').textContent = new Intl.DateTimeFormat(getLanguage() === 'bn' ? 'bn-BD' : 'en', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date());
   page.querySelector('#recent-empty').append(emptyState({ title: 'Your first word is the start of something.', description: 'No words yet. Add your first Arabic word when vocabulary entry is ready.', link: '#/add-word', label: 'Explore Add Word →' }));
   page.querySelector('#upcoming-empty').append(emptyState({ symbol: 'review', title: 'A clear schedule', description: 'Upcoming reviews will appear as you add and learn words.' }));
   page.querySelector('#activity-empty').append(emptyState({ symbol: 'sprout', title: 'Your story starts here', description: 'Your learning activity will appear here as you make progress.' }));
-  page.querySelector('.foundation-note p').textContent = t('Reviews and learning statistics arrive in later phases.');
   const metrics=page.querySelectorAll('.metric-value');
   for(const index of [0,2])metrics[index].textContent='—';
   page.querySelector('.hero-progress strong').textContent='—';
@@ -39,6 +39,7 @@ export function dashboard() {
   total.textContent='—';favorite.textContent='—';metrics[1].textContent='—';
   const account=getAccount();
   const setup=onboarding();if(setup)page.querySelector('.page-heading').after(setup);
+  if(account.status!=='ready'){metrics[3].closest('.metric').querySelector('p').textContent=t('Sign in to continue.');}
   if(account.status!=='ready')page.querySelector('#recent-empty').replaceChildren(emptyState({title:t('Sign in to see your collection.'),description:t('Your words are stored privately in your account.'),link:'#/settings',label:t('Open Settings')}));
   else queueMicrotask(async()=>{
     try{
@@ -63,13 +64,18 @@ export function dashboard() {
     }catch{if(page.isConnected)page.querySelector('#recent-empty').replaceChildren(emptyState({title:t('Collection could not be loaded. Retry from Vocabulary.'),description:t('Your words are stored privately in your account.'),link:'#/vocabulary',label:t('View vocabulary')}));}
   });
 
-  if(account.status==='ready')queueMicrotask(async()=>{try{const data=await statisticsData();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;const st=streaks(data.calendar,data.today,data.goals.minimum_activity||1);metrics[1].textContent=data.new_today;metrics[2].textContent=data.reviewed_today;metrics[3].textContent=data.quiz_today+' / '+data.goals.quiz_questions;page.querySelector('.hero-progress strong').textContent=data.reviewed_today+' / '+(data.goals.reviews??(data.reviewed_today+data.due));const progress=page.querySelector('.hero-progress progress');progress.max=Math.max(1,data.goals.reviews??(data.reviewed_today+data.due));progress.value=data.reviewed_today;const rows=page.querySelectorAll('.summary-row strong');[data.learning,data.reviewing,data.mastered,data.weak,data.favorites].forEach((v,i)=>rows[i].textContent=v);page.querySelector('.streak-card p strong').textContent=st.current;page.querySelector('.streak-bottom strong').textContent=st.longest;page.querySelector('.foundation-note p').textContent='';const activity=page.querySelector('#activity-empty');activity.replaceChildren();for(const day of data.calendar.slice(-5).reverse()){const row=document.createElement('p');row.textContent=day.study_day+' · '+day.n;activity.append(row);}}catch{}});
+  if(account.status==='ready')queueMicrotask(async()=>{try{const data=await statisticsData();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;const st=streaks(data.calendar,data.today,data.goals.minimum_activity||1);metrics[1].textContent=data.new_today;metrics[2].textContent=data.reviewed_today;metrics[3].textContent=data.quiz_today+' / '+data.goals.quiz_questions;
+const quizCard=metrics[3].closest('.metric');quizCard.querySelector('p').textContent=t(data.quiz_today>=data.goals.quiz_questions?'Daily goal reached. Keep practising!':'Saved answers / daily question goal');
+const quizProgress=document.createElement('progress');quizProgress.max=Math.max(1,data.goals.quiz_questions);quizProgress.value=data.quiz_today;quizProgress.setAttribute('aria-label',t('Daily quiz goal progress'));quizCard.append(quizProgress);
+metrics[1].closest('a').href='#/vocabulary?status=today';metrics[2].closest('a').href='#/history?from='+data.today+'&to='+data.today+'&kind=review';page.querySelector('.hero-progress strong').textContent=data.reviewed_today+' / '+(data.goals.reviews??(data.reviewed_today+data.due));const progress=page.querySelector('.hero-progress progress');progress.max=Math.max(1,data.goals.reviews??(data.reviewed_today+data.due));progress.value=data.reviewed_today;const rows=page.querySelectorAll('.summary-row strong');[data.learning,data.reviewing,data.mastered,data.weak,data.favorites].forEach((v,i)=>rows[i].textContent=v);page.querySelector('.streak-card p strong').textContent=st.current;page.querySelector('.streak-bottom strong').textContent=st.longest;const activity=page.querySelector('#activity-empty');activity.replaceChildren();activity.append(activityChart(data.calendar,data.today));}catch{if(page.isConnected){page.querySelector('#activity-empty').replaceChildren(emptyState({title:t('Activity could not be loaded.'),description:t('Check your connection and try again.'),link:'#/statistics',label:t('Statistics')}));metrics[3].textContent='—';metrics[3].closest('.metric').querySelector('p').textContent=t('Activity could not be loaded.');}}});
   return page;
 }
 
 function metric(symbol, label, value, hint) {
-  return `<article class="card metric"><div class="metric-top"><span class="metric-icon">${icon(symbol)}</span><span>${label}</span></div><strong class="metric-value">${value}</strong><p>${hint}</p></article>`;
+  const routes={'Words due':'#/review','New words':'#/vocabulary?status=today','Reviewed today':'#/history?kind=review','Quiz questions today':'#/quiz'};
+  return `<a href="${routes[label]}" class="card metric metric-link"><div class="metric-top"><span class="metric-icon">${icon(symbol)}</span><span>${label}</span></div><strong class="metric-value">${value}</strong><p>${hint}</p></a>`;
 }
 function summary(symbol, label, count) {
-  return `<div class="summary-row"><span>${icon(symbol)} ${label}</span><strong>${count}</strong></div>`;
+  const routes={Learning:'#/vocabulary?status=learning',Reviewing:'#/vocabulary?status=reviewing',Mastered:'#/mastered','Weak words':'#/weak-words',Favorites:'#/favorites'};
+  return `<a href="${routes[label]}" class="summary-row"><span>${icon(symbol)} ${label}</span><strong>${count}</strong></a>`;
 }

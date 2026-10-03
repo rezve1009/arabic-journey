@@ -48,15 +48,20 @@ export function statisticsPage(route) {
   if (route.id === "history") {
     const from = field("From date", "date"),
       to = field("To date", "date");
+    const params=new URLSearchParams(location.hash.split('?')[1]||'');
+    from.input.value=params.get('from')||'';to.input.value=params.get('to')||'';
+    const kind=node('select');kind.setAttribute('aria-label','Activity type');
+    for(const [value,label]of [['','All activity'],['word','Added words'],['review','Reviews'],['quiz','Quiz answers']])kind.append(Object.assign(node('option',label),{value}));kind.value=params.get('kind')||'';
     let index = 0;
     const load = async () => {
       card.replaceChildren(node("p", "Loading…"));
       try {
         const data = await vocabularyRequest((c) =>
-          c.rpc("learning_history", {
+          c.rpc("activity_history", {
             p_from: from.input.value || null,
             p_to: to.input.value || null,
             p_page: index,
+            p_kind:kind.value||null,
           }),
         );
         if (!page.isConnected) return;
@@ -73,8 +78,8 @@ export function statisticsPage(route) {
                 timeZone: getAccount().settings.timezone,
               }).format(new Date(e.event_at)),
             ),
-            node("p", e.kind),
-            node("p", e.result),
+            node("p", e.kind==='word'?'Added word':e.kind==='review'?'Review':'Quiz answer'),
+            node("p", e.result==='added'?'Added to vocabulary':e.result),
           );
           if (e.new_interval)
             row.append(
@@ -109,6 +114,7 @@ export function statisticsPage(route) {
     page.querySelector(".page-heading").append(
       from.wrap,
       to.wrap,
+      kind,
       action("Apply filters", () => {
         index = 0;
         load();
