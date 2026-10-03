@@ -297,7 +297,9 @@ export function quizPage() {
     const options = node("div", "", "mcq-options");
     for (const [index, choice] of q.choices.entries()) {
       const btn = action(choice, () => submit(choice));
-      btn.textContent = String.fromCharCode(65 + index) + ". " + choice;
+      const marker=content('span',String.fromCharCode(65+index)+'. ','mcq-marker');marker.lang='en';marker.dir='ltr';
+      const answer=content('span',choice,'mcq-answer');if(q.answer_lang){answer.lang=q.answer_lang;answer.dir=q.answer_lang==='ar'?'rtl':'ltr';}
+      btn.replaceChildren(marker,answer);
       btn.dataset.noTranslate = "";
       if(q.answer_lang){btn.lang=q.answer_lang;btn.dir=q.answer_lang=== "ar"?"rtl":"ltr";}
       options.append(btn);

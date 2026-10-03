@@ -1,13 +1,13 @@
 import { t } from './i18n.js';
 import { getAccount } from './supabase.js';
-import { parseRoot, parseArabicList, displayArabic, futureArabic, pronouns } from './arabic-utils.js';
+import { parseRoot, parseArabicList, displayArabic, pronouns } from './arabic-utils.js';
 
 const verbFields = ['verb_form','past_base','present_base','imperative','active_participle','passive_participle'];
 const nounFields = ['singular','dual','plurals','broken_plurals','masculine','feminine','synonyms','antonyms'];
 const listFields = new Set(['plurals','broken_plurals','synonyms','antonyms']);
 const labels = {
   root_input:'Root letters',root_meaning:'Root meaning',wazn:'Wazn / pattern',verb_form:'Verb form',
-  masdars_input:'Masdars',past_base:'Past base',present_base:'Present base',imperative:'Imperative base',
+  masdars_input:'Masdars',past_base:'Past base',present_base:'Present / future base',imperative:'Imperative base',
   active_participle:'Active participle',passive_participle:'Passive participle',linguistic_provenance:'Grammar source',
   singular:'Singular',dual:'Dual',plurals:'Plurals',broken_plurals:'Broken plurals',masculine:'Masculine',feminine:'Feminine',synonyms:'Synonyms',antonyms:'Antonyms',
 };
@@ -85,41 +85,33 @@ export function morphologyEditor(draft,{disabled=false}={}) {
   return section;
 }
 export function conjugationTable(word,{editable=false,disabled=false,expanded=false}={}) {
-  const section=node('section',null,'conjugation-section');section.append(node('h3',t('14 pronoun conjugations')));
-  const controls=node('div',null,'vocabulary-actions');const content=node('div');
-  const compact=node('button',t('Compact View'),'button button-secondary');compact.type='button';
-  const expand=node('button',t('Expanded View'),'button button-secondary');expand.type='button';
-  compact.disabled=disabled;expand.disabled=disabled;controls.append(compact,expand);section.append(controls,node('p',t('Future is derived from each saved present form. Imperative applies only to second-person pronouns.'),'settings-help'),content);
-  const render=()=>{
-    compact.setAttribute('aria-pressed',String(!expanded));expand.setAttribute('aria-pressed',String(expanded));content.replaceChildren();
-    const table=node('table',null,'conjugation-table');const caption=node('caption',t('Past, present, future and imperative'));table.append(caption);
-    const head=node('thead');const header=node('tr');for(const text of ['Pronoun','Past','Present','Future','Imperative']){const th=node('th',t(text));th.scope='col';header.append(th);}head.append(header);table.append(head);
-    const body=node('tbody');const prefs=arabicPreferences();
-    for(const pronoun of pronouns) {
-      const saved=word.conjugations?.[pronoun.id]||{};
-      if(!expanded&&!Object.values(saved).some(value=>value?.trim()))continue;
-      const row=node('tr');const name=node('th');name.scope='row';name.append(arabicNode('span',pronoun.arabic,{editing:editable}),node('small',t(pronoun.label)));row.append(name);
-      const future=node('td');future.dataset.label=t('Future');
-      const futureText=arabicNode('span',futureArabic(saved.present,prefs.prefix),{editing:editable});future.append(futureText);
-      for(const tense of ['past','present','future','imperative']) {
-        if(tense==='future'){row.append(future);continue;}
-        const cell=node('td');cell.dataset.label=t(tense[0].toUpperCase()+tense.slice(1));
-        if(tense==='imperative'&&!pronoun.imperative){cell.append(node('span','—'));row.append(cell);continue;}
-        if(editable){
-          const input=node('input');input.lang='ar';input.dir='rtl';input.maxLength=200;input.value=saved[tense]||'';input.disabled=disabled;
-          input.setAttribute('aria-label',`${t(pronoun.label)} — ${t(tense[0].toUpperCase()+tense.slice(1))}`);
-          input.dataset.pronoun=pronoun.id;input.dataset.tense=tense;
-          input.addEventListener('input',()=>{word.conjugations||={};word.conjugations[pronoun.id]||={};word.conjugations[pronoun.id][tense]=input.value;changed(word,'conjugations');if(tense==='present')futureText.textContent=futureArabic(input.value,prefs.prefix)||'—';});
-          cell.append(input);
-        }else cell.append(arabicNode('span',saved[tense]||'—'));
-        if(!futureText.textContent)futureText.textContent='—';row.append(cell);
-      }
-      body.append(row);
-    }
-    if(!body.children.length){content.append(node('p',t('No conjugations entered. Choose Expanded View to see all 14 pronouns.'),'settings-help'));return;}
-    table.append(body);content.append(table);
-  };
-  compact.addEventListener('click',()=>{expanded=false;render();});expand.addEventListener('click',()=>{expanded=true;render();});render();return section;
+ const section=node('section',null,'conjugation-section');section.append(node('h3',t('14 pronoun conjugations')));
+ const controls=node('div',null,'vocabulary-actions'),content=node('div',null,'conjugation-tables');
+ const compact=node('button',t('Compact View'),'button button-secondary'),expand=node('button',t('Expanded View'),'button button-secondary');
+ for(const button of [compact,expand]){button.type='button';button.disabled=disabled;}controls.append(compact,expand);
+ const status=node('p',null,'settings-help');status.setAttribute('aria-live','polite');
+ section.append(controls,node('p',t('Compact: saved past and present / future forms. Expanded: all pronouns, meanings and imperative forms.'),'settings-help'),status,content);
+ const render=()=>{
+  compact.setAttribute('aria-pressed',String(!expanded));expand.setAttribute('aria-pressed',String(expanded));content.replaceChildren();
+  const visible=pronouns.filter(p=>expanded||Object.values(word.conjugations?.[p.id]||{}).some(value=>value?.trim()));
+  status.textContent=t(expanded?'Expanded view: all 14 pronouns and imperative forms.':'Compact view: {count} saved pronouns.',{count:visible.length});
+  if(!visible.length){content.append(node('p',t('No conjugations entered. Choose Expanded View to see all 14 pronouns.'),'settings-help'));return;}
+  for(const [tense,label]of [['past','Past'],['present','Present / future'],...(expanded?[['imperative','Imperative']]:[])]){
+   const table=node('table',null,'conjugation-table tense-table');table.dataset.tense=tense;table.append(node('caption',t(label)));
+   const head=node('thead'),header=node('tr');for(const text of ['Pronoun',label]){const th=node('th',t(text));th.scope='col';header.append(th);}head.append(header);table.append(head);
+   const body=node('tbody');
+   for(const pronoun of visible){if(tense==='imperative'&&!pronoun.imperative)continue;
+    const row=node('tr'),name=node('th');name.scope='row';name.append(arabicNode('span',pronoun.arabic,{editing:editable}));if(expanded)name.append(node('small',t(pronoun.label)));row.append(name);
+    const saved=word.conjugations?.[pronoun.id]||{},cell=node('td');
+    if(editable){const input=node('input');input.lang='ar';input.dir='rtl';input.maxLength=200;input.value=saved[tense]||'';input.disabled=disabled;input.setAttribute('aria-label',t(pronoun.label)+' — '+t(label));input.dataset.pronoun=pronoun.id;input.dataset.tense=tense;
+     input.addEventListener('input',()=>{word.conjugations||={};word.conjugations[pronoun.id]||={};word.conjugations[pronoun.id][tense]=input.value;changed(word,'conjugations');});cell.append(input);
+    }else cell.append(arabicNode('span',saved[tense]||'—'));
+    row.append(cell);body.append(row);
+   }
+   if(body.children.length){table.append(body);content.append(table);}
+  }
+ };
+ compact.addEventListener('click',()=>{expanded=false;render();});expand.addEventListener('click',()=>{expanded=true;render();});render();return section;
 }
 export function morphologyDetails(word) {
   const section=node('section',null,'morphology-details');
@@ -131,7 +123,6 @@ export function morphologyDetails(word) {
     if(word.verb_form)add('Verb form',t('Form {form}',{form:['I','II','III','IV','V','VI','VII','VIII','IX','X'][word.verb_form-1]}),false);
     add('Masdars',(word.masdars||[]).join('\n'));
     for(const key of verbFields.filter(key=>key!=='verb_form'))add(labels[key],word[key]);
-    add('Future',futureArabic(word.present_base,arabicPreferences().prefix));
   } else for(const key of nounFields)add(labels[key],Array.isArray(word.morphology?.[key])?word.morphology[key].join('\n'):word.morphology?.[key]);
   add('Grammar source',t({manual:'Manual',teacher:'Teacher',import:'Imported',ai_suggestion:'AI suggestion (unverified)'}[word.linguistic_provenance]||'Manual'),false);
   section.append(list);
