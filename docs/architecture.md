@@ -169,3 +169,6 @@ Recent activity renders actual word creation, review and saved quiz answer count
 
 ### Verb table and Arabic reading update — 2026-10-03
 Conjugation display and editing use separate pronoun/past and pronoun/present-future tables. On phones they remain two-column tables and stack by tense. Compact view includes saved pronouns; expanded view includes all 14 pronouns with translated meanings and a separate six-pronoun imperative table. Switching views preserves draft edits. Derived future display is removed; stored present forms and existing backend grammar contracts remain intact. Arabic MCQ answers use a separate Arabic text span, minimum 38px Lateef font and generous line height; prompts use at least 42px.
+
+### Searchable tag selection — 2026-10-03
+Word entry uses a bounded, searchable tag/deck picker with selected chips, removal buttons, Unicode matching and 50-result increments. Search does not modify draft selections; selected unavailable tag IDs remain until explicitly removed. The redundant fixed-schedule/history block is removed from vocabulary word details at user request; Review and History remain functional.

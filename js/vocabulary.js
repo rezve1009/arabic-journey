@@ -1,3 +1,4 @@
+import {tagPicker} from './tag-picker.js';
 import {wordNeighbors,bindWordSwipe} from './word-navigation.js';
 import {audio}from './learning-ui.js';
 import { getAccount, subscribeAccount } from './supabase.js';
@@ -5,7 +6,7 @@ import { t, getLanguage } from './i18n.js';
 import { emptyState, showModal, icon } from './ui.js';
 import { listWords, listTags, getWord, writeVocabulary, vocabularyError } from './vocabulary-data.js';
 import { hydrateMorphology, morphologyEditor, morphologyValues, morphologyDetails, mergeMorphologyDraft, arabicDisplay } from './morphology.js';
-import {reviewDetails} from './srs-details.js';
+
 
 const types = ['verb','noun','adjective','particle','phrase','other'];
 const basic = ['arabic_word','bangla_meaning','english_meaning','arabic_meaning','transliteration','word_type','example_arabic','example_bangla','example_english','notes','favorite','needs_details'];
@@ -181,10 +182,7 @@ function editor() {
   if(draft.mode==='full')for(const name of ['favorite','needs_details']){
     const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!draft[name];input.disabled=busy;input.addEventListener('change',()=>{draft[name]=input.checked;draft.dirty=true;});label.append(input,el('span',t(labels[name])));form.append(label);
   }
-  const selected=el('fieldset',null,'tag-selector');selected.append(el('legend',t('Tags / Decks')));
-  if(!tags.length)selected.append(el('p',t('Create tags or decks on the Tags page.'),'settings-help'));
-  for(const tag of tags){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=draft.tags.includes(tag.id);input.disabled=busy;input.addEventListener('change',()=>{draft.tags=input.checked?[...draft.tags,tag.id]:draft.tags.filter(id=>id!==tag.id);draft.dirty=true;});label.append(input,userText('span',`${t(tag.kind==='deck'?'Deck':'Tag')}: ${tag.name}`));selected.append(label);}
-  for(const missing of draft.tags.filter(id=>!tags.some(tag=>tag.id===id))){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=true;input.disabled=busy;input.addEventListener('change',()=>{if(!input.checked){draft.tags=draft.tags.filter(id=>id!==missing);draft.dirty=true;}});label.append(input,el('span',t('Unavailable tag — uncheck to remove')));selected.append(label);}
+  const selected=tagPicker(tags,{selected:draft.tags,disabled:busy,onChange:values=>{draft.tags=values;draft.dirty=true;}});
   form.append(selected,link(t('Manage tags / decks'),'#/tags'));
   const actions=el('div',null,'vocabulary-actions');
   const submit=el('button',t(busy?'Saving…':draft.revision?'Save changes':'Save word'),'button button-primary');submit.type='submit';submit.disabled=busy;
@@ -240,7 +238,7 @@ function details(word) {
   card.append(morphologyDetails(word));
   if(word.needs_details)card.append(el('p',t('Needs details'),'pill'));
   const actions=el('div',null,'vocabulary-actions');actions.append(link(t('Edit word'),'#/add-word?edit='+word.id,'button button-primary'),button(word.favorite?'Remove favorite':'Add favorite',()=>run(()=>writeVocabulary({action:'favorite',id:word.id,revision:word.revision,values:{favorite:!word.favorite}}),'Favorite updated.')),button('Delete word',()=>confirmAction('Delete this word? It will leave your collection. Learning history is preserved.',()=>run(async()=>{await writeVocabulary({action:'delete',id:word.id,revision:word.revision});location.hash='#/vocabulary';},'Word deleted.')),'button button-danger'));
-  card.append(actions,reviewDetails(word));return card;
+  card.append(actions);return card;
 }
 function tagManager() {
   const section=el('section',null,'card tag-manager');
