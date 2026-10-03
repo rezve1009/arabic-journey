@@ -17,7 +17,7 @@
   }
 
   .hero-copy h2 {
-    font-size:34px
+    font-size:36px
   }
 
   .metric-top {
@@ -34,7 +34,7 @@
   }
 
   .metric-top>span:last-child {
-    font-size:11px
+    font-size:13px
   }
 
 }
@@ -45,7 +45,7 @@
   }
 
   .brand {
-    font-size:16px;
+    font-size:18px;
     gap:9px;
     padding-left:3px
   }
@@ -83,16 +83,16 @@
   }
 
   .arabic-ring span {
-    font-size:90px
+    font-size:92px
   }
 
   .art-label {
-    font-size:6px;
+    font-size:8px;
     letter-spacing:1px
   }
 
   .hero-copy h2 {
-    font-size:26px
+    font-size:28px
   }
 
   .metric-grid {
@@ -108,7 +108,7 @@
   }
 
   .card-heading .text-link {
-    font-size:10px
+    font-size:12px
   }
 
   .page-footer {
@@ -155,14 +155,14 @@
   }
 
   .arabic-ring span {
-    font-size:115px
+    font-size:117px
   }
 
 }
 
 @media(max-width:760px) {
   :root {
-    font-size:15px
+    font-size:17px
   }
 
   .sidebar {
@@ -186,7 +186,7 @@
     display:flex;
     gap:10px;
     align-items:center;
-    font-size:15px;
+    font-size:17px;
     font-weight:650;
     letter-spacing:-.3px
   }
@@ -202,7 +202,7 @@
   }
 
   .connection-status {
-    font-size:10px;
+    font-size:12px;
     gap:5px
   }
 
@@ -217,18 +217,18 @@
   }
 
   .page-heading h1 {
-    font-size:26px;
+    font-size:28px;
     letter-spacing:-.8px
   }
 
   .eyebrow {
-    font-size:8px;
+    font-size:10px;
     letter-spacing:1.4px;
     margin-bottom:8px
   }
 
   .page-description {
-    font-size:11px;
+    font-size:13px;
     line-height:1.7;
     max-width:255px;
     margin-top:8px
@@ -264,18 +264,18 @@
   }
 
   .hero-copy h2 {
-    font-size:26px;
+    font-size:28px;
     margin-top:15px
   }
 
   .hero-copy>p {
-    font-size:10px;
+    font-size:12px;
     max-width:225px
   }
 
   .hero-copy>.button {
     min-height:44px;
-    font-size:11px;
+    font-size:13px;
     gap:10px;
     padding:10px 13px
   }
@@ -293,11 +293,11 @@
   }
 
   .arabic-ring span {
-    font-size:75px
+    font-size:77px
   }
 
   .art-label {
-    font-size:5px;
+    font-size:7px;
     letter-spacing:1px
   }
 
@@ -320,7 +320,7 @@
   }
 
   .hero-progress>div {
-    font-size:8px;
+    font-size:10px;
     gap:8px
   }
 
@@ -340,25 +340,25 @@
   .metric-top {
     flex-direction:row;
     align-items:center;
-    font-size:11px;
+    font-size:13px;
     gap:10px
   }
 
   .metric-value {
-    font-size:30px;
+    font-size:32px;
     margin-top:13px
   }
 
   .metric p {
-    font-size:10px
+    font-size:12px
   }
 
   .section-heading h2 {
-    font-size:15px
+    font-size:17px
   }
 
   .section-heading>span {
-    font-size:9px
+    font-size:11px
   }
 
   .card-heading {
@@ -366,7 +366,7 @@
   }
 
   .card-heading h2 {
-    font-size:14px
+    font-size:16px
   }
 
   .empty-state {
@@ -374,16 +374,16 @@
   }
 
   .empty-state h3 {
-    font-size:13px
+    font-size:15px
   }
 
   .empty-state p {
-    font-size:11px;
+    font-size:13px;
     max-width:270px
   }
 
   .text-link {
-    font-size:12px;
+    font-size:14px;
     min-height:32px
   }
 
@@ -416,16 +416,16 @@
 
   .summary-row {
     min-height:40px;
-    font-size:12px
+    font-size:14px
   }
 
   .collection-total>span {
-    font-size:11px
+    font-size:13px
   }
 
   .collection-card>.button {
     min-height:44px;
-    font-size:12px
+    font-size:14px
   }
 
   .streak-card {
@@ -433,15 +433,15 @@
   }
 
   .streak-card h2 {
-    font-size:13px
+    font-size:15px
   }
 
   .streak-card p {
-    font-size:12px
+    font-size:14px
   }
 
   .streak-bottom {
-    font-size:11px
+    font-size:13px
   }
 
   .quiet-note {
@@ -449,13 +449,13 @@
   }
 
   .foundation-note {
-    font-size:10px;
+    font-size:12px;
     justify-content:center
   }
 
   .page-footer {
     padding:16px 20px calc(94px + env(safe-area-inset-bottom));
-    font-size:9px
+    font-size:11px
   }
 
   .bottom-nav {
@@ -480,7 +480,7 @@
     gap:5px;
     min-width:54px;
     min-height:48px;
-    font-size:9px;
+    font-size:11px;
     color:#90998f;
     border:0;
     background:none;
@@ -505,11 +505,11 @@
   }
 
   .availability-card h2 {
-    font-size:21px
+    font-size:23px
   }
 
   .availability-copy {
-    font-size:12px
+    font-size:14px
   }
 
   .future-page {
@@ -521,7 +521,7 @@
   }
 
   .more-menu .nav-link {
-    font-size:12px
+    font-size:14px
   }
 
   .desktop-break {
@@ -558,15 +558,15 @@
 
   .metric-top {
     gap:7px;
-    font-size:10px
+    font-size:12px
   }
 
   .page-heading h1 {
-    font-size:24px
+    font-size:26px
   }
 
   .mobile-brand {
-    font-size:14px
+    font-size:16px
   }
 
   .topbar-actions {
@@ -574,7 +574,7 @@
   }
 
   .card-heading .text-link {
-    font-size:9px
+    font-size:11px
   }
 
   .more-menu {
@@ -590,7 +590,7 @@
 
 @media(max-width:760px) {
   .page-description,.hero-copy>p,.metric-top,.metric p,.empty-state p,.quiet-note p,.foundation-note,.streak-bottom,.connection-status,.page-footer {
-    font-size:11px
+    font-size:13px
   }
 
   .hero-copy>p {
@@ -607,26 +607,26 @@
   }
 
   .arabic-ring span {
-    font-size:63px
+    font-size:65px
   }
 
   .hero-progress>div {
-    font-size:10px;
+    font-size:12px;
     flex-wrap:wrap;
     gap:2px
   }
 
   .mobile-nav-link {
-    font-size:10px;
+    font-size:12px;
     color:#637366
   }
 
   .eyebrow {
-    font-size:10px
+    font-size:12px
   }
 
   .card-heading .text-link {
-    font-size:11px
+    font-size:13px
   }
 
   .brand small,.eyebrow,.mobile-nav-link,.page-footer {
@@ -635,7 +635,7 @@
 
 }
 
-@media(max-width:1000px){.topbar-actions{gap:10px}.breadcrumb{font-size:10px;gap:8px}.connection-status{font-size:10px}.account-link{font-size:11px}}
-@media(max-width:760px){.settings-grid{grid-template-columns:1fr;gap:16px}.settings-card{padding:22px}.topbar{padding:0 14px}.topbar-actions{gap:7px}.language-toggle{padding:6px 9px;min-height:40px}.account-link{display:none}.connection-status{display:none}.topbar-actions .icon-button{width:32px;height:40px}.mobile-brand{font-size:14px}.app-notice{margin:14px 20px 0;font-size:12px}.settings-card>h2{font-size:17px}.settings-form .button{min-height:46px}html[lang=bn] .page-heading h1{font-size:23px}html[lang=bn] .hero-art{display:none}html[lang=bn] .metric-top{font-size:10px}html[lang=bn] .mobile-nav-link{font-size:10px}html[lang=bn] .mobile-brand{font-size:13px}}
-@media(max-width:370px){.mobile-brand{gap:7px;font-size:13px}.mobile-brand img{width:28px;height:28px}.topbar-actions{gap:3px}.language-toggle{font-size:11px}.app-notice{margin-left:14px;margin-right:14px}.settings-card{padding:18px}}
+@media(max-width:1000px){.topbar-actions{gap:10px}.breadcrumb{font-size:12px;gap:8px}.connection-status{font-size:12px}.account-link{font-size:13px}}
+@media(max-width:760px){.settings-grid{grid-template-columns:1fr;gap:16px}.settings-card{padding:22px}.topbar{padding:0 14px}.topbar-actions{gap:7px}.language-toggle{padding:6px 9px;min-height:40px}.account-link{display:none}.connection-status{display:none}.topbar-actions .icon-button{width:32px;height:40px}.mobile-brand{font-size:16px}.app-notice{margin:14px 20px 0;font-size:14px}.settings-card>h2{font-size:19px}.settings-form .button{min-height:46px}html[lang=bn] .page-heading h1{font-size:25px}html[lang=bn] .hero-art{display:none}html[lang=bn] .metric-top{font-size:12px}html[lang=bn] .mobile-nav-link{font-size:12px}html[lang=bn] .mobile-brand{font-size:15px}}
+@media(max-width:370px){.mobile-brand{gap:7px;font-size:15px}.mobile-brand img{width:28px;height:28px}.topbar-actions{gap:3px}.language-toggle{font-size:13px}.app-notice{margin-left:14px;margin-right:14px}.settings-card{padding:18px}}
 @media(max-width:760px){.connection-status{display:inline-flex;font-size:0;width:8px;gap:0}.connection-status::before{width:7px;height:7px}.topbar-actions{gap:6px}}

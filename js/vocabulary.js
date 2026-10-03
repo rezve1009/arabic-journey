@@ -1,3 +1,4 @@
+import {reviewReturnContext}from './review.js';
 import {tagPicker} from './tag-picker.js';
 import {wordNeighbors,bindWordSwipe} from './word-navigation.js';
 import {audio}from './learning-ui.js';
@@ -221,7 +222,10 @@ function duplicateDialog(matches) {
   const actions=el('div',null,'vocabulary-actions');actions.append(button('Add Anyway',()=>{document.getElementById('app-dialog').close();saveDraft(true);}),button('Cancel',()=>document.getElementById('app-dialog').close()));content.append(actions);showModal(t('Possible duplicate'),content);
 }
 function details(word) {
-  const card=el('article',null,'card word-details');const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));if(word.example_arabic)card.append(audio(word.example_arabic));}
+  const card=el('article',null,'card word-details');
+  const reviewContext=new URLSearchParams(location.hash.split('?')[1]||'').get('from')==='review'?reviewReturnContext(word.id):null;
+  if(reviewContext){const resume=el('div',null,'review-resume-banner');resume.append(el('p',t('Your review is paused at word {position} of {total}.',{...reviewContext})),link(t('← Return to current review'),'#/review','button button-primary'));card.append(resume);}
+const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));if(word.example_arabic)card.append(audio(word.example_arabic));}
   const nav=el('nav',null,'word-navigation');nav.setAttribute('aria-label',t('Word navigation'));
   let neighbors={previous:null,next:null};
   const navigate=direction=>{if(card.isConnected&&neighbors[direction])location.hash='#/vocabulary?word='+neighbors[direction];};
@@ -238,6 +242,7 @@ function details(word) {
   card.append(morphologyDetails(word));
   if(word.needs_details)card.append(el('p',t('Needs details'),'pill'));
   const actions=el('div',null,'vocabulary-actions');actions.append(link(t('Edit word'),'#/add-word?edit='+word.id,'button button-primary'),button(word.favorite?'Remove favorite':'Add favorite',()=>run(()=>writeVocabulary({action:'favorite',id:word.id,revision:word.revision,values:{favorite:!word.favorite}}),'Favorite updated.')),button('Delete word',()=>confirmAction('Delete this word? It will leave your collection. Learning history is preserved.',()=>run(async()=>{await writeVocabulary({action:'delete',id:word.id,revision:word.revision});location.hash='#/vocabulary';},'Word deleted.')),'button button-danger'));
+  if(reviewContext)actions.prepend(link(t('← Return to current review'),'#/review','button button-primary'));
   card.append(actions);return card;
 }
 function tagManager() {

@@ -172,3 +172,6 @@ Conjugation display and editing use separate pronoun/past and pronoun/present-fu
 
 ### Searchable tag selection — 2026-10-03
 Word entry uses a bounded, searchable tag/deck picker with selected chips, removal buttons, Unicode matching and 50-result increments. Search does not modify draft selections; selected unavailable tag IDs remain until explicitly removed. The redundant fixed-schedule/history block is removed from vocabulary word details at user request; Review and History remain functional.
+
+### Approved review redesign — 2026-10-03
+Review summary separates saved ratings today, current due words and weak words; it reloads authoritative statistics after ratings, with queued reviews explicitly shown as pending sync. Offline summary uses owner-scoped cached history/state without falsely counting pending writes as server-saved. Practice accepts presets 5/10/20 or whole custom counts 1–1000 and states when the requested number exceeds available words. A review-origin detail link displays return controls only for the same owner and active word; navigation preserves session position and answer reveal state. Practice recording mode is explicit. App typography is increased by 2px, including CSS sizes and the display-only Arabic size offset, without modifying stored font preferences.

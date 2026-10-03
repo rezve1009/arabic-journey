@@ -1,3 +1,5 @@
+import {t}from './i18n.js';
+import {practiceCount,reviewSummary}from './review-tools.js';
 import { getAccount, subscribeAccount } from "./supabase.js";
 import { getDueWords, getReviewInfo, recordFixedReview } from "./srs-data.js";
 import { getWord, listWords, listTags } from "./vocabulary-data.js";
@@ -46,6 +48,12 @@ export function reviewPage() {
     owner = account.user.id;
     session = null;
   }
+  page.classList.add('review-page');
+  page.querySelector('.page-heading').append(node('p','Recall a word, check its meaning, then rate your memory.','page-description'));
+  const summary=node('section','','review-summary');summary.setAttribute('aria-label','Review summary');
+  for(const [key,label]of [['reviewed','Reviewed today'],['due','Words due'],['weak','Weak words']]){const card=node('article','','card review-metric');card.append(node('p',label),content('strong','—'));card.dataset.metric=key;summary.append(card);}
+  const summaryStatus=node('p','Loading…','settings-help');summaryStatus.setAttribute('aria-live','polite');page.append(summary,summaryStatus);
+  queueMicrotask(async()=>{try{const data=await reviewSummary();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;for(const card of summary.children)card.querySelector('strong').textContent=data[card.dataset.metric];summaryStatus.textContent=data.pending?t('Pending sync: {count} reviews',{count:data.pending}):t('Today counts saved ratings, not sessions or word views.');}catch{if(page.isConnected)summaryStatus.textContent=t('Summary could not be loaded.');}});
   const body = node("section", "", "card study-card");
   page.append(body);
   if (!session) {
@@ -66,9 +74,7 @@ export function reviewPage() {
             "p",
             due.total +
               " " +
-              (account.settings.ui_language === "bn"
-                ? "শব্দ বাকি"
-                : "words due"),
+              t("words due"),
           ),
         );
         const counts = { New: 0, Learning: 0, "Long-term": 0, Weak: 0 };
@@ -92,9 +98,9 @@ export function reviewPage() {
           ]++;
           if (w.state.weak_score >= (account.settings.weak_weights?.threshold||2)) counts.Weak++;
         }
-        const stats = node("div", "", "study-preview");
+        const stats = node("div", "", "study-preview");stats.setAttribute('aria-label','Due word categories');
         for (const [k, v] of Object.entries(counts))
-          stats.append(node("p", k), content("strong", v));
+          {const cell=node('div','','due-category');cell.append(node('span',k),content('strong',v));stats.append(cell);}
         body.append(stats);
         if (all.length)
           body.append(
@@ -105,7 +111,7 @@ export function reviewPage() {
             node("p", "You're done for today. No words are currently due."),
           );
         const practice = node("div", "", "practice-controls");
-        practice.append(node("h3", "Random Practice"));
+        practice.append(node("h3", "Random Practice"),node('p','Choose your words and practise at your own pace.','settings-help'));
         const kind = node("select");
         kind.setAttribute("aria-label", "Practice selection");
         for (const value of ["all", "weak", "recent", "verb", "noun"]) {
@@ -119,13 +125,12 @@ export function reviewPage() {
           ) === "weak"
         )
           kind.value = "weak";
-        const limit = node("select");
-        limit.setAttribute("aria-label", "Practice word count");
-        for (const count of [5, 10, 20]) {
-          const o = content("option", count);
-          o.value = count;
-          limit.append(o);
-        }
+        const limit=node('input');limit.type='number';limit.min='1';limit.max='1000';limit.step='1';limit.value='5';limit.required=true;limit.setAttribute('aria-label','Practice word count');
+        const countsLabel=node('label','Practice word count');countsLabel.append(limit);
+        const presets=node('div','','practice-presets');
+        for(const count of [5,10,20]){const preset=action(String(count),()=>{limit.value=String(count);limit.dispatchEvent(new Event('input'));});presets.append(preset);}
+        const requested=node('p','','settings-help');limit.addEventListener('input',()=>{requested.textContent='';limit.setCustomValidity('');});
+        const kindLabel=node('label','Practice selection');kindLabel.append(kind);
         const tag = node("select");
         tag.setAttribute("aria-label", "Tag / Deck");
         tag.append(
@@ -135,6 +140,7 @@ export function reviewPage() {
           tag.append(
             Object.assign(content("option", item.name), { value: item.id }),
           );
+        const tagLabel=node("label","Tag / Deck");tagLabel.append(tag);let starting=false;
         const record = node("input");
         record.type = "checkbox";
         const label = node("label");
@@ -143,12 +149,17 @@ export function reviewPage() {
           node("span", "Record practice and update review schedule"),
         );
         practice.append(
-          kind,
-          limit,
-          tag,
+          kindLabel,
+          countsLabel,
+          presets,
+          requested,
+          tagLabel,
           label,
           action("Start Practice", async () => {
+            if(starting)return;
             try {
+              let wanted;try{wanted=practiceCount(limit.value);}catch{limit.setCustomValidity(t("Enter a whole number from 1 to 1000."));limit.reportValidity();return;}
+              starting=true;practice.querySelector(".button-primary").disabled=true;
               const pool = [];
               let p = 0,
                 total = 1;
@@ -172,22 +183,25 @@ export function reviewPage() {
               }
               if (kind.value !== "recent")
                 chosen.sort(() => Math.random() - 0.5);
-              chosen = chosen.slice(0, Number(limit.value));
+              chosen = chosen.slice(0, wanted);
               if (!chosen.length) {
                 body.append(node("p", "No eligible words."));
                 return;
               }
               for (const w of chosen)
                 if (!w.state) w.state = (await getReviewInfo(w.id)).state;
+              if(!page.isConnected||owner!==getAccount().user?.id)return;
               start(
                 chosen,
                 record.checked ? "recorded_practice" : "unrecorded",
+                wanted,
               );
             } catch (e) {
               message(body, e);
-            }
-          }),
+            }finally{starting=false;const startButton=practice.querySelector(".button-primary");if(startButton)startButton.disabled=false;}
+          }, true),
         );
+        const modeHint=node("p","Practice is not recorded. Your review schedule will stay unchanged.","practice-mode-note");label.className="practice-record-label";record.addEventListener("change",()=>{modeHint.textContent=t(record.checked?"Ratings will be saved and your review schedule will change.":"Practice is not recorded. Your review schedule will stay unchanged.");});practice.append(modeHint);
         body.append(practice);
         finish(page);
       } catch (e) {
@@ -197,6 +211,8 @@ export function reviewPage() {
     });
     return page;
   }
+  const modeNote=node('p',session.mode==='unrecorded'?'Practice is not recorded. Your review schedule will stay unchanged.':'Ratings will be saved and your review schedule will change.','practice-mode-note');body.append(modeNote);
+  if(session.requested>session.words.length)body.append(node('p',t('Requested {requested}; {available} matching words are available.',{requested:session.requested,available:session.words.length}),'settings-help'));
   if (session.index >= session.words.length) {
     body.append(
       node("h2", "Session complete"),
@@ -290,7 +306,7 @@ export function reviewPage() {
         body.append(text);
       }
     if (word.root?.length) body.append(content("p", word.root.join(" — ")));
-    body.append(link("View details", "#/vocabulary?word=" + word.id));
+    body.append(link("View details", "#/vocabulary?word=" + word.id+"&from=review"));
     const ratings = node("div", "", "rating-actions");
     for (const rating of ["again", "hard", "good", "easy"]) {
       const predicted = fixedTransition(
@@ -364,9 +380,10 @@ export function reviewPage() {
   );
   return finish(page);
 }
-function start(words, mode) {
+function start(words, mode, requested=words.length) {
   session = {
     words,
+    requested,
     mode,
     index: 0,
     revealed: false,
@@ -412,3 +429,5 @@ async function submit(rating, body) {
     if (session === active) render();
   }
 }
+
+export function reviewReturnContext(wordId){return session&&owner===getAccount().user?.id&&session.index<session.words.length&&session.words[session.index].id===wordId?{position:session.index+1,total:session.words.length}:null;}

@@ -185,6 +185,15 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     await wait(() => button("Show Answer"));
     button("Show Answer").click();
     assert(document.body.textContent.includes("লিখেছে"));
+    const {reviewReturnContext}=await import('../js/review.js');
+    assert.deepEqual(reviewReturnContext(id),{position:1,total:1});
+    assert.equal(document.querySelector('a[href*="from=review"]').getAttribute('href'),'#/vocabulary?word='+id+'&from=review');
+    const {vocabularyPage,unmountVocabulary}=await import('../js/vocabulary.js');
+    unmountReview();location.hash='#/vocabulary?word='+id+'&from=review';document.body.replaceChildren(vocabularyPage({id:'vocabulary',title:'Vocabulary'}));
+    await wait(()=>document.querySelector('.review-resume-banner'));
+    assert.equal(document.querySelector('.review-resume-banner a').getAttribute('href'),'#/review');
+    unmountVocabulary();location.hash='#/review';mountReview();
+    assert(document.body.textContent.includes('লিখেছে'));assert(button('Good'));assert.equal(button('Show Answer'),undefined);
     button("Good").click();
     await wait(() => document.body.textContent.includes("Session complete"));
     assert.equal(

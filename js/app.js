@@ -76,7 +76,7 @@ about.addEventListener('click', () => {
 });
 
 function updateConnectivity() {
-  document.documentElement.style.setProperty('--arabic-size',`${getAccount().settings?.arabic_font_size||38}px`);
+  document.documentElement.style.setProperty('--arabic-size',`${(getAccount().settings?.arabic_font_size||38)+2}px`);
   const status = document.getElementById('connection-status');
   status.classList.toggle('is-offline', !navigator.onLine);
   const account = getAccount();
