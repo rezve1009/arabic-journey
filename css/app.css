@@ -1231,3 +1231,5 @@ html[lang=bn] .brand small{font-size:10px}
 
 .word-navigation { display:flex; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; }
 .word-details { touch-action:pan-y; }
+
+.pwa-update-banner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin:1rem; }

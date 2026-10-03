@@ -107,7 +107,7 @@ export function quizPage() {
     card.append(
       count.wrap,
       node("p", "Only MCQ questions are used. Choose an option to answer."),
-      node("p", "MCQ is selected by default. Add at least two words with different English meanings; up to four options come from your vocabulary."),
+      node("p", "MCQs mix Bengali, Arabic and English. Options come from your own words."),
       weak.wrap,
       newWords.wrap,
       mastered.wrap,
@@ -140,7 +140,7 @@ export function quizPage() {
               card.append(
                 node(
                   "p",
-                  selected.length === 1 && selected[0] === "multiple_choice" ? "MCQ needs at least two words with different English meanings. Add more words, then start again." : "No eligible questions. Add words or enable more question types.",
+                  selected.length === 1 && selected[0] === "multiple_choice" ? "Add at least two words with different meanings to start an MCQ quiz." : "No eligible questions. Add words or enable more question types.",
                 ),
               );
               startOp = null;
@@ -209,9 +209,10 @@ export function quizPage() {
     return finish(page);
   }
   const q = quiz.questions[quiz.index];
+  card.dataset.questionId=q.id;
   card.append(
     content("p", quiz.index + 1 + " / " + quiz.questions.length),
-    node("p", q.type.replaceAll("_", " ")),
+    node("p", q.direction ? ({bangla_arabic:"Bengali → Arabic",arabic_bangla:"Arabic → Bengali",arabic_english:"Arabic → English",english_arabic:"English → Arabic"}[q.direction]) : q.type.replaceAll("_", " ")),
   );
   if (q.pronoun)
     card.append(
@@ -231,7 +232,8 @@ export function quizPage() {
     }),
     "quiz-prompt",
   );
-  if (/[ء-ي]/.test(q.prompt)) {
+  if (q.prompt_lang) prompt.lang=q.prompt_lang;
+  if (q.prompt_lang === "ar" || (!q.prompt_lang && /[ء-ي]/.test(q.prompt))) {
     prompt.lang = "ar";
     prompt.dir = "rtl";
   }
@@ -283,6 +285,7 @@ export function quizPage() {
       const btn = action(choice, () => submit(choice));
       btn.textContent = String.fromCharCode(65 + index) + ". " + choice;
       btn.dataset.noTranslate = "";
+      if(q.answer_lang){btn.lang=q.answer_lang;btn.dir=q.answer_lang=== "ar"?"rtl":"ltr";}
       options.append(btn);
     }
     card.append(options);

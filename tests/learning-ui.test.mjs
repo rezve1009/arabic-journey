@@ -202,13 +202,15 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     await wait(()=>document.body.textContent.includes('Your older typing quiz'));
     assert((await readStore('meta',uid+':archived-quiz:'+oldQuiz.id)).quiz);
     assert(!document.querySelector('fieldset'));
+    document.querySelector('input[type=number]').value='2';
     button('Start Quiz').click();
     await wait(()=>document.querySelector('.mcq-options'));
     while(document.querySelector('.mcq-options')){
       const options=document.querySelector('.mcq-options');
       assert.equal(button('Submit answer'),undefined);
-      const prompt=document.querySelector('.quiz-prompt').textContent;
-      [...options.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+(prompt==='كَتَبَ'?'wrote':'pen'))).click();
+      const questions=(await db.query('select questions from public.quiz_sessions order by started_at desc limit 1')).rows[0].questions;
+      const answer=questions.find(q=>q.id===document.querySelector('.study-card').dataset.questionId).answers[0];
+      [...options.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+answer)).click();
       await wait(()=>!options.isConnected);
     }
     await wait(() => document.body.textContent.includes("Results saved."));
@@ -252,19 +254,39 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     await db.query("select public.vocabulary_write($1,'save',$2,null,$3)", [randomUUID(),randomUUID(),JSON.stringify({arabic_word:'قَلَمٌ',english_meaning:'pen',bangla_meaning:'কলম',word_type:'noun'})]);
     mountQuiz();
     button('New quiz').click();
+    document.querySelector('input[type=number]').value='2';
     button('Start Quiz').click();
     await wait(()=>document.querySelector('.mcq-options'));
     while(document.querySelector('.mcq-options')){
       const options=document.querySelector('.mcq-options');
       assert.equal(options.querySelectorAll('button').length,2);
       assert.equal(button('Submit answer'),undefined);
-      const prompt=document.querySelector('.quiz-prompt').textContent;
-      const answer=prompt==='كَتَبَ'?'wrote':'pen';
+      const questions=(await db.query('select questions from public.quiz_sessions order by started_at desc limit 1')).rows[0].questions;
+      const answer=questions.find(q=>q.id===document.querySelector('.study-card').dataset.questionId).answers[0];
       [...options.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+answer)).click();
       await wait(()=>!options.isConnected);
     }
     await wait(()=>document.body.textContent.includes('Results saved.'));
     assert(document.body.textContent.includes('2 / 2'));
+    const {initializePwa,pwaSettings}=await import('../js/pwa.js');
+    const posted=[],registration={waiting:{postMessage:m=>posted.push(m)},addEventListener:()=>{},update:async()=>{}};
+    let registrationOptions;
+    navigator.serviceWorker={register:async(url,options)=>{registrationOptions=options;return registration;},addEventListener:()=>{}};
+    document.body.replaceChildren(Object.assign(document.createElement('main'),{id:'main'}));
+    await initializePwa();
+    assert.equal(registrationOptions.updateViaCache,'none');
+    assert(document.getElementById('pwa-update-banner'));
+    const pendingKey=uid+':update-test';
+    await atomic(['outbox'],tx=>tx.objectStore('outbox').put({key:pendingKey,owner:uid}));
+    document.getElementById('pwa-update-banner').querySelector('button').click();
+    await wait(()=>document.body.textContent.includes('Sync pending changes before updating.'));
+    assert.equal(posted.length,0);
+    await atomic(['outbox'],tx=>tx.objectStore('outbox').delete(pendingKey));
+    document.body.append(pwaSettings());
+    document.getElementById('pwa-update-banner').querySelector('button').click();
+    await wait(()=>posted.length===1);
+    assert.equal(posted[0].type,'APPLY_UPDATE');
+    assert(!button('Reload app'));
   } finally {
     await db.close();
   }
