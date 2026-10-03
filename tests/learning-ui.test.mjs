@@ -205,6 +205,24 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     document.querySelector('input[type=number]').value='2';
     button('Start Quiz').click();
     await wait(()=>document.querySelector('.mcq-options'));
+    const firstOptions=document.querySelector('.mcq-options');
+    const original=(await readStore('meta',uid+':active-quiz')).quiz;
+    const firstAnswer=original.questions[0].answers[0];
+    [...firstOptions.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+firstAnswer)).click();
+    await wait(()=>!firstOptions.isConnected);
+    button('Restart quiz').click();
+    button('Cancel').click();
+    assert(document.querySelector('.mcq-options'));
+    button('Restart quiz').click();
+    button('Restart now').click();
+    await wait(()=>button('Start Quiz'));
+    const archived=(await readStore('meta',uid+':archived-quiz:'+original.id)).quiz;
+    assert.equal(archived.answers.length,1);
+    assert.equal((await db.query('select count(*)::int n from public.quiz_answers')).rows[0].n,0);
+    document.querySelector('input[type=number]').value='2';
+    button('Start Quiz').click();
+    await wait(()=>document.querySelector('.mcq-options'));
+    assert.notEqual((await readStore('meta',uid+':active-quiz')).quiz.id,original.id);
     while(document.querySelector('.mcq-options')){
       const options=document.querySelector('.mcq-options');
       assert.equal(button('Submit answer'),undefined);

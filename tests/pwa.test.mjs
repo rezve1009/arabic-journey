@@ -5,21 +5,24 @@ import vm from "node:vm";
 test("PWA scope, static-only caching, safe updates and grouped notification click", async () => {
   const code = await readFile("service-worker.js", "utf8"),
     handlers = {};
+  let automatic=false;
   const fake = {
     registration: { scope: "https://example.test/arabic-journey/" },
     clients: {},
+    skipWaiting:()=>{automatic=true;},
     addEventListener: (event, fn) => (handlers[event] = fn),
   };
   const context = {
     self: fake,
     URL,
+    Request,
     caches: {
       match: async () => ({ cached: true }),
       open: async () => ({
         addAll: async (assets) => {
-          assert(assets.includes("./js/sync.js"));
-          assert(assets.includes("./icons/icon-512.png"));
-          assert(!assets.some((a) => a.includes("supabase/migrations")));
+          assert(assets.some(a=>a.url.endsWith("/js/sync.js")&&a.cache==="reload"));
+          assert(assets.some(a=>a.url.endsWith("/icons/icon-512.png")));
+          assert(!assets.some((a) => a.url.includes("supabase/migrations")));
         },
       }),
     },
@@ -29,6 +32,7 @@ test("PWA scope, static-only caching, safe updates and grouped notification clic
   let pending;
   handlers.install({ waitUntil: (p) => (pending = p) });
   await pending;
+  assert(automatic,"A complete new asset bundle activates without clearing learner storage");
   let handled = false;
   const event = (url, mode = "cors") => ({
     request: { method: "GET", url, mode },

@@ -171,6 +171,20 @@ export function quizPage() {
     card.append(node("p", "Your older typing quiz was kept in local storage. Start a new MCQ quiz."),action("Start new MCQ quiz", async()=>{await archiveQuiz(owner,quiz);quiz=null;startOp=null;render();},true));
     return finish(page);
   }
+  if (!quiz.saved) {
+    const restart=action('Restart quiz',()=>{
+      if(busy||quiz.saving||card.querySelector('.quiz-restart-confirm'))return;
+      const confirmation=node('div','','feedback quiz-restart-confirm');
+      confirmation.append(node('p','Restart this quiz? Your current answers will be kept separately.'),action('Cancel',()=>confirmation.remove()),action('Restart now',async()=>{
+        if(busy||quiz.saving)return;
+        const active=quiz,uid=owner;busy=true;
+        try{await archiveQuiz(uid,active);if(quiz===active&&getAccount().user?.id===uid){quiz=null;startOp=null;render();}}catch(error){message(confirmation,error);}finally{busy=false;}
+      },true));
+      card.prepend(confirmation);
+    });
+    restart.disabled=!!quiz.saving;
+    card.append(restart);
+  }
   if (quiz.index >= quiz.questions.length) {
     card.append(
       node("h2", "Quiz complete"),
