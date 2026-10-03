@@ -1228,3 +1228,6 @@ html[lang=bn] .brand small{font-size:10px}
 
 .mcq-options { display: grid; gap: .75rem; margin-block: 1rem; }
 .mcq-options .button { text-align: start; white-space: normal; min-height: 48px; }
+
+.word-navigation { display:flex; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+.word-details { touch-action:pan-y; }

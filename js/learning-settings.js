@@ -88,18 +88,8 @@ export function learningSettings() {
       );
     }
   }
-  const types = node("fieldset");
-  types.append(node("legend", "Question types"));
-  for (const type of quizTypes) {
-    const f = field(type.replaceAll("_", " "), "checkbox");
-    f.input.checked = quiz.types.includes(type);
-    types.append(f.wrap);
-    collect.push(() => {
-      quiz.types = quiz.types.filter((t) => t !== type);
-      if (f.input.checked) quiz.types.push(type);
-    });
-  }
-  form.append(types);
+  form.append(node('p','Only MCQ questions are used. Choose an option to answer.'));
+  collect.push(()=>{quiz.types=['multiple_choice'];});
   const submit = node(
     "button",
     "Save learning preferences",

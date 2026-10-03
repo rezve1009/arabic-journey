@@ -127,7 +127,7 @@ const { quizPage, setQuizRenderer } = await import("../js/quiz.js");
 const { statisticsPage } = await import("../js/statistics.js");
 const { refreshCache, queueWrite, synchronize, pendingOperations } =
   await import("../js/sync.js");
-const { getCache } = await import("../js/storage.js");
+const { getCache, atomic, readStore } = await import("../js/storage.js");
 const wait = async (condition) => {
   for (let i = 0; i < 100; i++) {
     if (condition()) return;
@@ -195,24 +195,21 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     unmountReview();
     const mountQuiz = () => document.body.replaceChildren(quizPage());
     setQuizRenderer(mountQuiz);
+    await db.query("select public.vocabulary_write($1,'save',$2,null,$3)", [randomUUID(),randomUUID(),JSON.stringify({arabic_word:'قَلَمٌ',english_meaning:'pen',bangla_meaning:'কলম',word_type:'noun'})]);
+    const oldQuiz={id:randomUUID(),index:0,answers:[],questions:[{type:'arabic_typing',prompt:'book',answers:['كتاب']}],saved:false};
+    await atomic(['meta'],tx=>tx.objectStore('meta').put({key:uid+':active-quiz',owner:uid,quiz:oldQuiz}));
     mountQuiz();
-    assert.deepEqual([...document.querySelectorAll("fieldset input:checked")].map(x=>x.value), ["multiple_choice"]);
-    button("Use saved question types").click();
-    button("Start Quiz").click();
-    await wait(() => button("Submit answer"));
-    while (button("Submit answer")) {
-      const form = document.querySelector("form"),
-        prompt = document.querySelector(".quiz-prompt").textContent;
-      form.querySelector("input").value =
-        prompt === "كَتَبَ"
-          ? document.body.textContent.includes("arabic bangla")
-            ? "লিখেছে"
-            : "wrote"
-          : "كَتَبَ";
-      form.dispatchEvent(
-        new dom.window.Event("submit", { bubbles: true, cancelable: true }),
-      );
-      await wait(() => !form.isConnected);
+    await wait(()=>document.body.textContent.includes('Your older typing quiz'));
+    assert((await readStore('meta',uid+':archived-quiz:'+oldQuiz.id)).quiz);
+    assert(!document.querySelector('fieldset'));
+    button('Start Quiz').click();
+    await wait(()=>document.querySelector('.mcq-options'));
+    while(document.querySelector('.mcq-options')){
+      const options=document.querySelector('.mcq-options');
+      assert.equal(button('Submit answer'),undefined);
+      const prompt=document.querySelector('.quiz-prompt').textContent;
+      [...options.querySelectorAll('button')].find(b=>b.textContent.endsWith('. '+(prompt==='كَتَبَ'?'wrote':'pen'))).click();
+      await wait(()=>!options.isConnected);
     }
     await wait(() => document.body.textContent.includes("Results saved."));
     assert.equal(
@@ -227,7 +224,7 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     assert.equal(document.querySelectorAll(".activity-day").length, 365);
     await refreshCache();
     navigator.onLine = false;
-    const state = (await getCache(uid, "word_review_state"))[0];
+    const state = (await getCache(uid, "word_review_state")).find(r=>r.word_id===id);
     await queueWrite("fixed_review", {
       p_operation: randomUUID(),
       p_word: id,

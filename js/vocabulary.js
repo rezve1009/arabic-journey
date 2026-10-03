@@ -1,3 +1,4 @@
+import {wordNeighbors,bindWordSwipe} from './word-navigation.js';
 import {audio}from './learning-ui.js';
 import { getAccount, subscribeAccount } from './supabase.js';
 import { t, getLanguage } from './i18n.js';
@@ -10,6 +11,7 @@ const types = ['verb','noun','adjective','particle','phrase','other'];
 const basic = ['arabic_word','bangla_meaning','english_meaning','arabic_meaning','transliteration','word_type','example_arabic','example_bangla','example_english','notes','favorite','needs_details'];
 const labels = {arabic_word:'Arabic word',bangla_meaning:'Bengali meaning',english_meaning:'English meaning',arabic_meaning:'Arabic meaning',transliteration:'Transliteration',word_type:'Word type',example_arabic:'Arabic example',example_bangla:'Bengali example',example_english:'English example',notes:'Notes',favorite:'Favorite',needs_details:'Needs details'};
 let owner, draft, editKey, tags = [], busy = false, notice = '', failure = false, rerender = ()=>{}, mount = 0, timer;
+let browseFavorites=false;
 let tagDraft = {name:'',kind:'tag'};
 let demoRequests = [];
 const filterDefaults={search:'',type:'',status:'',tag:'',from:'',to:'',page:0,favorite:false,root:'',harakah:true,tatweel:true,unicode:true};
@@ -94,6 +96,7 @@ function choices(values,selected,change,label) {
 }
 function tagOptions() { return tags.map(tag=>[tag.id,`${tag.kind==='deck'?t('Deck'):t('Tag')}: ${tag.name}`]); }
 function collection(content,favorites,token) {
+  browseFavorites=favorites;
   const toolbar=el('form',null,'vocabulary-filters');
   const search=el('input');search.type='search';search.value=filters.search;search.placeholder=t('Search words, meanings, examples or tags');search.setAttribute('aria-label',t('Search vocabulary'));search.maxLength=200;
   const result=el('div');
@@ -220,6 +223,15 @@ function duplicateDialog(matches) {
 }
 function details(word) {
   const card=el('article',null,'card word-details');const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));if(word.example_arabic)card.append(audio(word.example_arabic));}
+  const nav=el('nav',null,'word-navigation');nav.setAttribute('aria-label',t('Word navigation'));
+  let neighbors={previous:null,next:null};
+  const navigate=direction=>{if(card.isConnected&&neighbors[direction])location.hash='#/vocabulary?word='+neighbors[direction];};
+  const previous=button('← Previous word',()=>navigate('previous')),next=button('Next word →',()=>navigate('next'));
+  previous.disabled=true;next.disabled=true;nav.append(previous,next);card.insertBefore(nav,card.firstChild);
+  card.append(el('p',t('On your phone, swipe left for the next word and right for the previous word.'),'settings-help'));
+  bindWordSwipe(card,navigate);
+  const navOwner=owner;
+  wordNeighbors(word.id,page=>listWords({...filters,favorite:browseFavorites||filters.favorite,page}),filters.page).then(result=>{if(!card.isConnected||owner!==navOwner)return;neighbors=result;if(result.page!==undefined)filters.page=result.page;previous.disabled=!result.previous;next.disabled=!result.next;}).catch(()=>{if(card.isConnected)nav.append(button('Retry navigation',()=>rerender()));});
   const list=el('dl',null,'word-detail-list');
   for(const name of basic.filter(name=>!['arabic_word','favorite','needs_details'].includes(name))){if(!word[name])continue;list.append(el('dt',t(labels[name])),name==='word_type'?el('dd',t(word[name])):userText('dd',word[name],name.includes('arabic')?'ar':name.includes('bangla')?'bn':undefined));}
   list.append(el('dt',t('Tags / Decks')),userText('dd',tags.filter(tag=>word.tags.includes(tag.id)).map(tag=>tag.name).join(' · ')||t('None')));

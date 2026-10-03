@@ -84,6 +84,11 @@ export function quizPage() {
         page.isConnected &&
         !quiz
       ) {
+        if (!mcqSession(draft.quiz)) {
+          await archiveQuiz(uid,draft.quiz);
+          card.append(node("p", "Your older typing quiz was kept in local storage. Start a new MCQ quiz."));
+          return;
+        }
         quiz = { ...draft.quiz, at: performance.now(), saving: false };
         render();
       }
@@ -92,17 +97,6 @@ export function quizPage() {
     const count = field("Question count", "number", prefs.question_count);
     count.input.min = 1;
     count.input.max = 100;
-    const types = node("fieldset");
-    types.append(node("legend", "Question types"));
-    for (const type of quizTypes) {
-      const wrap = node("label"),
-        box = node("input");
-      box.type = "checkbox";
-      box.value = type;
-      box.checked = type === "multiple_choice";
-      wrap.append(box, node("span", type === "multiple_choice" ? "MCQ (Multiple choice)" : type.replaceAll("_", " ")));
-      types.append(wrap);
-    }
     const weak = field("Weak word percentage", "number", prefs.weak_percentage);
     weak.input.min = 0;
     weak.input.max = 100;
@@ -112,10 +106,8 @@ export function quizPage() {
     mastered.input.checked = prefs.include_mastered;
     card.append(
       count.wrap,
-      action("MCQ only", () => { for (const box of types.querySelectorAll("input")) box.checked = box.value === "multiple_choice"; }),
-      action("Use saved question types", () => { for (const box of types.querySelectorAll("input")) box.checked = prefs.types.includes(box.value); }),
+      node("p", "Only MCQ questions are used. Choose an option to answer."),
       node("p", "MCQ is selected by default. Add at least two words with different English meanings; up to four options come from your vocabulary."),
-      types,
       weak.wrap,
       newWords.wrap,
       mastered.wrap,
@@ -123,9 +115,7 @@ export function quizPage() {
         "Start Quiz",
         async () => {
           if (busy) return;
-          const selected = [...types.querySelectorAll("input:checked")].map(
-            (x) => x.value,
-          );
+          const selected = ["multiple_choice"];
           if (
             !selected.length ||
             !count.input.reportValidity() ||
@@ -175,6 +165,10 @@ export function quizPage() {
         true,
       ),
     );
+    return finish(page);
+  }
+  if (!mcqSession(quiz)) {
+    card.append(node("p", "Your older typing quiz was kept in local storage. Start a new MCQ quiz."),action("Start new MCQ quiz", async()=>{await archiveQuiz(owner,quiz);quiz=null;startOp=null;render();},true));
     return finish(page);
   }
   if (quiz.index >= quiz.questions.length) {
@@ -292,41 +286,6 @@ export function quizPage() {
       options.append(btn);
     }
     card.append(options);
-  } else if (q.type === "true_false") {
-    card.append(
-      action("True", () => submit("true")),
-      action("False", () => submit("false")),
-    );
-  } else {
-    const form = node("form", "", "settings-form"),
-      answer = field("Your answer");
-    answer.input.required = true;
-    answer.input.autocomplete = "off";
-    if (
-      [
-        "bangla_arabic",
-        "english_arabic",
-        "arabic_typing",
-        "root",
-        "masdar",
-        "conjugation",
-        "fill_blank",
-      ].includes(q.type)
-    ) {
-      answer.input.dir = "rtl";
-      answer.input.lang = "ar";
-    }
-    const btn = node("button", "Submit answer", "button button-primary");
-    btn.type = "submit";
-    form.append(answer.wrap, btn);
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (form.reportValidity()) submit(answer.input.value);
-    });
-    card.append(form);
-    queueMicrotask(() => {
-      if (page.isConnected) answer.input.focus();
-    });
   }
   return finish(page);
 }
@@ -359,3 +318,6 @@ async function save(card) {
     active.saving = false;
   }
 }
+
+function mcqSession(session){return session.questions?.length>0&&session.questions.every(q=>q.type==='multiple_choice'&&q.choices?.length>=2);}
+async function archiveQuiz(uid,session){await atomic(['meta'],tx=>{const store=tx.objectStore('meta');store.put({key:uid+':archived-quiz:'+session.id,owner:uid,quiz:structuredClone(session)});store.delete(uid+':active-quiz');});}
