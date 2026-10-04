@@ -1,3 +1,4 @@
+import {mountDueCountdown}from '../due-countdown.js';
 import {activityChart} from '../dashboard-activity.js';
 import {onboarding}from '../onboarding.js';
 import {statisticsData,streaks} from '../statistics.js';
@@ -47,6 +48,7 @@ export function dashboard() {
       if(!page.isConnected||getAccount().user?.id!==account.user.id)return;
       total.textContent=collection.total;favorite.textContent=favorites.total;
       metrics[0].textContent=due?due.total:'—';
+      if(due)mountDueCountdown(metrics[0].closest('.metric'),{initial:due,onRefresh:value=>{metrics[0].textContent=value.total;}});
       const upcoming=page.querySelector('#upcoming-empty');upcoming.replaceChildren();
       if(!due)upcoming.append(emptyState({symbol:'review',title:t('Review schedule could not be loaded.'),description:t('Retry')}));
       else if(!due.upcoming.length)upcoming.append(emptyState({symbol:'review',title:t('A clear schedule'),description:t('No upcoming reviews. Due words are counted above.')}));

@@ -1,3 +1,4 @@
+import {mountDueCountdown}from './due-countdown.js';
 import {upcomingList}from './upcoming-list.js';
 import {examplesDetails} from './examples.js';
 import {reviewDate} from './srs-details.js';
@@ -59,6 +60,7 @@ export function reviewPage() {
   queueMicrotask(async()=>{try{const data=await reviewSummary();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;for(const card of summary.children)card.querySelector('strong').textContent=data[card.dataset.metric];summaryStatus.textContent=data.pending?t('Pending sync: {count} reviews',{count:data.pending}):t('Today counts saved ratings, not sessions or word views.');}catch{if(page.isConnected)summaryStatus.textContent=t('Summary could not be loaded.');}});
   const body = node("section", "", "card study-card");
   const fullUpcoming=upcomingList();page.append(body,fullUpcoming);
+  queueMicrotask(()=>{if(!page.isConnected)return;let previous=null;mountDueCountdown(summary.querySelector('[data-metric=due]'),{onRefresh:value=>{summary.querySelector('[data-metric=due] strong').textContent=value.total;if(previous!==null&&value.total>previous&&!session)render();previous=value.total;}});});
   if (!session) {
     body.classList.remove("card");body.classList.add("review-setup");
     body.append(node("p", "Loading…"));

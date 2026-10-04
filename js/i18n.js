@@ -334,3 +334,6 @@ Object.assign(bn,{'Search options affect matching only; your saved Arabic stays 
 Object.assign(bn,{'Breadcrumb':'পেজের পথ','Word and meanings':'শব্দ ও অর্থ','Organize your word':'শব্দ সাজিয়ে রাখুন','App release: 2026-10-04 · Organized entry and revision':'অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · নতুন শব্দ যোগ ও রিভিশন ডিজাইন'});
 
 Object.assign(bn,{'New word':'নতুন শব্দ'});
+
+Object.assign(bn,{'Next review in':'পরের রিভিউ বাকি','Time until next review':'পরের রিভিউ পর্যন্ত সময়ের অগ্রগতি','Ready to review now':'এখন রিভিশন করার সময়','{count}% of the review interval has passed':'রিভিউয়ের বিরতির {count}% সময় পার হয়েছে','Check connection to refresh review time.':'রিভিউ সময় আপডেট করতে সংযোগ পরীক্ষা করুন।','App release: 2026-10-04 · Review countdown':'অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · রিভিউ কাউন্টডাউন'});
+Object.assign(bn,{'{count} days':'{count} দিন'});

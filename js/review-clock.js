@@ -1,0 +1,2 @@
+export function reviewClock(word,now=Date.now()){const target=Date.parse(word?.next_review_at);if(!Number.isFinite(target))return null;const remaining=Math.max(0,target-now),span=Number(word.interval_days)*86400000;return{remaining,progress:Number.isFinite(span)&&span>0?Math.min(100,Math.max(0,100*(1-remaining/span))):null,expired:target<=now};}
+export function countdownParts(ms){const seconds=Math.max(0,Math.ceil(ms/1000));return{days:Math.floor(seconds/86400),hours:Math.floor(seconds%86400/3600),minutes:Math.floor(seconds%3600/60),seconds:seconds%60};}
