@@ -16,3 +16,5 @@ export async function getReviewInfo(word){
 export const recordFixedReview=({operation,word,revision,rating,responseMs=null,mode='scheduled'})=>cloudWrite('fixed_review',{p_operation:operation,p_word:word,p_revision:revision,p_rating:rating,p_response_ms:responseMs,p_mode:mode});
 
 export async function getUpcomingWords(limit=10){if(navigator.onLine)return vocabularyRequest(c=>c.rpc('fixed_upcoming',{p_limit:limit}));const uid=getAccount().user.id;const [words,states]=await Promise.all([getCache(uid,'words'),getCache(uid,'word_review_state')]);return selectUpcoming(words,states,limit);}
+
+export async function getUpcomingPage(page=0){if(navigator.onLine)return vocabularyRequest(c=>c.rpc('fixed_upcoming_page',{p_page:page}));const uid=getAccount().user.id;const [words,states]=await Promise.all([getCache(uid,'words'),getCache(uid,'word_review_state')]);return selectUpcoming(words,states,25,Date.now(),page*25);}

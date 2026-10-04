@@ -1,3 +1,4 @@
+import {pagination}from './pagination.js';
 import {examplesEditor,examplesDetails} from './examples.js';
 import {reviewDetails} from './srs-details.js';
 import {reviewReturnContext}from './review.js';
@@ -114,10 +115,7 @@ function collection(content,favorites,token) {
       if(!data.words.length)result.append(emptyState({title:t('No words found'),description:t('Add your first word or change the filters.'),link:'#/add-word',label:t('Add a word')}));
       const grid=el('div',null,'word-grid');
       for(const word of data.words)grid.append(wordCard(word));result.append(grid);
-      const pager=el('div',null,'vocabulary-actions');
-      const previous=button('Previous',()=>{filters.page--;refresh();});previous.disabled=filters.page===0;
-      const next=button('Next',()=>{filters.page++;refresh();});next.disabled=(filters.page+1)*25>=data.total;
-      pager.append(previous,el('span',t('Page {page}',{page:filters.page+1})),next);result.append(pager);
+      result.append(pagination(filters.page,data.total,page=>{filters.page=page;refresh();}));
     }catch(error){if(token===mount&&request===sequence)result.replaceChildren(el('p',t(vocabularyError(error)),'feedback is-error'),button('Retry',refresh));}
     finally{if(request===sequence)result.removeAttribute('aria-busy');}
   };
@@ -129,7 +127,7 @@ function collection(content,favorites,token) {
   if(!favorites){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!filters.favorite;input.addEventListener('change',()=>{filters.favorite=input.checked;changed();});label.append(input,el('span',t('Favorites only')));mainFilters.append(label);}
   const rootLabel=el('label',t('Root filter'));const root=el('input');root.lang='ar';root.dir='rtl';root.value=filters.root;root.placeholder=t('ك ت ب or د ح ر ج');root.maxLength=40;root.addEventListener('input',()=>{filters.root=root.value;clearTimeout(timer);timer=setTimeout(changed,250);});rootLabel.append(root);extra.append(rootLabel);
   const searchOptions=el('fieldset',null,'search-options');searchOptions.append(el('legend',t('Search comparison')));
-  for(const [key,text]of[['harakah','Ignore Harakah'],['tatweel','Ignore Tatweel'],['unicode','Normalize Unicode']]){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=filters[key];input.addEventListener('change',()=>{filters[key]=input.checked;changed();});label.append(input,el('span',t(text)));searchOptions.append(label);}extra.append(searchOptions);
+  for(const [key,text]of[['harakah','Ignore Harakah'],['tatweel','Ignore Tatweel'],['unicode','Normalize Unicode']]){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=filters[key];input.addEventListener('change',()=>{filters[key]=input.checked;changed();});label.append(input,el('span',t(text)));searchOptions.append(label);}extra.append(searchOptions);extra.append(el('p',t('Search options affect matching only; your saved Arabic stays unchanged.'),'settings-help search-help'));
   for(const [name,label] of [['from','Added from (UTC)'],['to','Added through (UTC)']]) {
     const wrapper=el('label',t(label));const input=el('input');input.type='date';input.value=filters[name];input.addEventListener('change',()=>{filters[name]=input.value;changed();});wrapper.append(input);extra.append(wrapper);
   }
