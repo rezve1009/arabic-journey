@@ -306,7 +306,7 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     const todayBar=document.querySelector('[aria-current=date]');
     location.hash=todayBar.getAttribute('href');
     document.body.replaceChildren(statisticsPage({id:'history',title:'History'}));
-    await wait(()=>document.querySelector('.history-row'));
+    await wait(()=>document.querySelector('.activity-event'));
     assert.equal(document.querySelector('input[type=date]').value,stats.today);
     assert(document.body.textContent.includes('Added word'));
     const {initializePwa,pwaSettings}=await import('../js/pwa.js');

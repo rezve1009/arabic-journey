@@ -1,4 +1,8 @@
 const bn = {
+ "Today":"আজ", "View history":"ইতিহাস দেখুন", "Interval days":"বিরতি (দিন)",
+  "App release: 2026-10-04 · Examples, schedules and history":"অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · উদাহরণ, রিভিউ সময় ও ইতিহাস",
+"Examples":"উদাহরণ","Add an Arabic sentence and its Bengali or English meaning.":"আরবি বাক্য এবং তার বাংলা বা ইংরেজি অর্থ লিখুন।","Example {number}":"উদাহরণ {number}","+ Add example":"+ উদাহরণ যোগ করুন","Remove example":"উদাহরণ সরান","Upcoming words":"আসন্ন রিভিশনের শব্দ","The next five scheduled words. Due words appear above.":"পরবর্তী রিভিশনের প্রথম পাঁচটি শব্দ। সময় হয়ে যাওয়া শব্দ উপরে দেখাবে।","No upcoming words.":"আসন্ন রিভিশনের শব্দ নেই।","Learning status":"শেখার অবস্থা","Weak score":"কঠিনতার স্কোর","new":"নতুন","learning":"শেখার পর্যায়ে","reviewing":"দীর্ঘমেয়াদি রিভিশন","mastered":"আয়ত্ত করা","Explore your saved reviews, quiz answers and added words.":"সংরক্ষিত রিভিশন, কুইজের উত্তর ও যোগ করা শব্দ দেখুন।","Last 7 days":"গত ৭ দিন","All dates":"সব তারিখ","The start date must be before the end date.":"শুরুর তারিখ শেষের তারিখের আগে হতে হবে।","{total} activities · Page {page} of {pages}":"{total}টি কার্যক্রম · {pages} পাতার মধ্যে {page}","History for this word":"এই শব্দের ইতিহাস","All words":"সব শব্দ","Review schedule":"রিভিউ সূচি","{before} → {after} days":"{before} → {after} দিন","No activity in this period.":"এই সময়ে কোনো কার্যক্রম নেই।","Try another date range or record a review.":"অন্য তারিখ বেছে নিন অথবা একটি রিভিশন রেকর্ড করুন।","History pages":"ইতিহাসের পাতা","Again":"আবার","Hard":"কঠিন","Good":"ভালো","Easy":"সহজ",
+
   'Arabic Journey': 'আরবি জার্নি',
   'A little learning, every day.': 'প্রতিদিন একটু করে শেখা।',
   'YOUR LEARNING SPACE': 'আপনার শেখার জায়গা', 'YOUR COLLECTION': 'আপনার সংগ্রহ', 'TOOLS & INSIGHTS': 'সরঞ্জাম ও অগ্রগতি',
@@ -196,7 +200,7 @@ Object.assign(bn,{
  'Fixed schedule saved. Existing due dates were kept.':'নির্দিষ্ট সূচি সংরক্ষিত হয়েছে। আগের due date রাখা হয়েছে।',
  'Use 1–30 stages of 1–3650 whole days and valid rating behavior.':'১–৩০টি ধাপে ১–৩৬৫০ পূর্ণ দিন এবং সঠিক রেটিং আচরণ দিন।',
  'Apply the Phase 5 database migration to save the fixed schedule.':'নির্দিষ্ট সূচি সংরক্ষণ করতে ৫ নম্বর ধাপের database migration চালু করুন।',
- 'Loading review schedule…':'রিভিউ সূচি লোড হচ্ছে…','Review stage':'রিভিউয়ের ধাপ','Interval days':'Interval দিন','Next review':'পরের রিভিউ',
+ 'Loading review schedule…':'রিভিউ সূচি লোড হচ্ছে…','Review stage':'রিভিউয়ের ধাপ','Interval days':'বিরতি (দিন)','Next review':'পরের রিভিউ',
  'Schedule version':'সূচির সংস্করণ','Recorded reviews':'রেকর্ড করা রিভিউ','Due now':'এখন রিভিউ করার সময়','Scheduled':'সূচি নির্ধারিত',
  'No fixed schedule state is available.':'নির্দিষ্ট সূচির তথ্য পাওয়া যাচ্ছে না।','Recent review history':'সাম্প্রতিক রিভিউ ইতিহাস',
  'No recorded reviews yet. Rating controls arrive in Phase 6.':'এখনও রিভিউ রেকর্ড হয়নি। ৬ নম্বর ধাপে রেটিং বোতাম আসবে।',

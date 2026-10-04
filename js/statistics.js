@@ -1,3 +1,4 @@
+import {historyPage} from './history.js';
 import { vocabularyRequest } from "./vocabulary-data.js";
 import { getAccount } from "./supabase.js";
 import {
@@ -41,88 +42,12 @@ export function streaks(calendar, today, minimum = 1) {
 export const statisticsData = () =>
   vocabularyRequest((c) => c.rpc("learning_statistics"));
 export function statisticsPage(route) {
+  if(route.id === "history")return historyPage();
   const page = shell(route.title);
   if (!ready(page)) return finish(page);
   const card = node("section", "", "card");
   page.append(card);
-  if (route.id === "history") {
-    const from = field("From date", "date"),
-      to = field("To date", "date");
-    const params=new URLSearchParams(location.hash.split('?')[1]||'');
-    from.input.value=params.get('from')||'';to.input.value=params.get('to')||'';
-    const kind=node('select');kind.setAttribute('aria-label','Activity type');
-    for(const [value,label]of [['','All activity'],['word','Added words'],['review','Reviews'],['quiz','Quiz answers']])kind.append(Object.assign(node('option',label),{value}));kind.value=params.get('kind')||'';
-    let index = 0;
-    const load = async () => {
-      card.replaceChildren(node("p", "Loading…"));
-      try {
-        const data = await vocabularyRequest((c) =>
-          c.rpc("activity_history", {
-            p_from: from.input.value || null,
-            p_to: to.input.value || null,
-            p_page: index,
-            p_kind:kind.value||null,
-          }),
-        );
-        if (!page.isConnected) return;
-        card.replaceChildren();
-        for (const e of data.events) {
-          const row = node("article", "", "history-row");
-          row.append(
-            content("h3", e.arabic_word, "arabic"),
-            content(
-              "p",
-              new Intl.DateTimeFormat(undefined, {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone: getAccount().settings.timezone,
-              }).format(new Date(e.event_at)),
-            ),
-            node("p", e.kind==='word'?'Added word':e.kind==='review'?'Review':'Quiz answer'),
-            node("p", e.result==='added'?'Added to vocabulary':e.result),
-          );
-          if (e.new_interval)
-            row.append(
-              content(
-                "p",
-                e.prior_interval +
-                  "d → " +
-                  e.new_interval +
-                  "d · " +
-                  new Date(e.next_review_at).toLocaleString(),
-              ),
-            );
-          card.append(row);
-        }
-        if (!data.events.length) card.append(node("p", "No activity yet."));
-        const prev = action("Previous", () => {
-            index--;
-            load();
-          }),
-          next = action("Next", () => {
-            index++;
-            load();
-          });
-        prev.disabled = index === 0;
-        next.disabled = (index + 1) * 25 >= data.total;
-        card.append(prev, next);
-        finish(page);
-      } catch (e) {
-        message(card, e);
-      }
-    };
-    page.querySelector(".page-heading").append(
-      from.wrap,
-      to.wrap,
-      kind,
-      action("Apply filters", () => {
-        index = 0;
-        load();
-      }),
-    );
-    queueMicrotask(load);
-  } else
-    queueMicrotask(async () => {
+      queueMicrotask(async () => {
       try {
         const data = await statisticsData();
         if (!page.isConnected) return;

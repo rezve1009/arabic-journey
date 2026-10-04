@@ -1,3 +1,5 @@
+import {examplesDetails} from './examples.js';
+import {reviewDate} from './srs-details.js';
 import {t}from './i18n.js';
 import {practiceCount,reviewSummary}from './review-tools.js';
 import { getAccount, subscribeAccount } from "./supabase.js";
@@ -110,6 +112,7 @@ export function reviewPage() {
           body.append(
             node("p", "You're done for today. No words are currently due."),
           );
+        const upcoming=node('section','','upcoming-review');upcoming.append(node('h3','Upcoming words'),node('p','The next five scheduled words. Due words appear above.','settings-help'));if(due.upcoming?.length){for(const w of due.upcoming){const row=link('', '#/vocabulary?word='+w.id);row.className='upcoming-word';row.append(content('strong',w.arabic_word,'arabic'),content('span',reviewDate(w.next_review_at)));upcoming.append(row);}}else upcoming.append(node('p','No upcoming words.'));body.append(upcoming);
         const practice = node("div", "", "practice-controls");
         practice.append(node("h3", "Random Practice"),node('p','Choose your words and practise at your own pace.','settings-help'));
         const kind = node("select");
@@ -291,9 +294,6 @@ export function reviewPage() {
       "english_meaning",
       "arabic_meaning",
       "root_meaning",
-      "example_arabic",
-      "example_bangla",
-      "example_english",
       "notes",
     ])
       if (word[key]) {
@@ -305,6 +305,7 @@ export function reviewPage() {
         }
         body.append(text);
       }
+    body.append(examplesDetails(word));
     if (word.root?.length) body.append(content("p", word.root.join(" — ")));
     body.append(link("View details", "#/vocabulary?word=" + word.id+"&from=review"));
     const ratings = node("div", "", "rating-actions");

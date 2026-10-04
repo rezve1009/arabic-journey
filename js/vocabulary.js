@@ -1,3 +1,5 @@
+import {examplesEditor,examplesDetails} from './examples.js';
+import {reviewDetails} from './srs-details.js';
 import {reviewReturnContext}from './review.js';
 import {tagPicker} from './tag-picker.js';
 import {wordNeighbors,bindWordSwipe} from './word-navigation.js';
@@ -10,7 +12,7 @@ import { hydrateMorphology, morphologyEditor, morphologyValues, morphologyDetail
 
 
 const types = ['verb','noun','adjective','particle','phrase','other'];
-const basic = ['arabic_word','bangla_meaning','english_meaning','arabic_meaning','transliteration','word_type','example_arabic','example_bangla','example_english','notes','favorite','needs_details'];
+const basic = ['examples','arabic_word','bangla_meaning','english_meaning','arabic_meaning','transliteration','word_type','example_arabic','example_bangla','example_english','notes','favorite','needs_details'];
 const labels = {arabic_word:'Arabic word',bangla_meaning:'Bengali meaning',english_meaning:'English meaning',arabic_meaning:'Arabic meaning',transliteration:'Transliteration',word_type:'Word type',example_arabic:'Arabic example',example_bangla:'Bengali example',example_english:'English example',notes:'Notes',favorite:'Favorite',needs_details:'Needs details'};
 let owner, draft, editKey, tags = [], busy = false, notice = '', failure = false, rerender = ()=>{}, mount = 0, timer;
 let browseFavorites=false;
@@ -160,7 +162,7 @@ function editor() {
   const modes=el('div',null,'vocabulary-actions');
   for(const [value,label]of(draft.revision?[]:[['quick','Quick Add'],['full','Full Add']])){const node=button(label,()=>{draft.mode=value;rerender();});node.setAttribute('aria-pressed',String(draft.mode===value));modes.append(node);}
   form.append(modes,el('p',t('Arabic, Bengali and English are required. Quick Add marks a word as needing details.'),'settings-help'));
-  const fields=draft.mode==='quick'?['arabic_word','bangla_meaning','english_meaning']:basic.filter(name=>!['favorite','needs_details'].includes(name));
+  const fields=draft.mode==='quick'?['arabic_word','bangla_meaning','english_meaning']:basic.filter(name=>!['examples','example_arabic','example_bangla','example_english','favorite','needs_details'].includes(name));
   const grid=el('div',null,'word-fields');
   const grammar=el('div');
   const renderGrammar=()=>grammar.replaceChildren(morphologyEditor(draft,{disabled:busy}));
@@ -179,7 +181,7 @@ function editor() {
     input.disabled=busy;label.append(input);grid.append(label);
   }
   form.append(grid);
-  if(draft.mode==='full'){renderGrammar();form.append(grammar);}
+  if(draft.mode==='full'){form.append(examplesEditor(draft,{disabled:busy}));renderGrammar();form.append(grammar);}
   if(draft.mode==='full')for(const name of ['favorite','needs_details']){
     const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!draft[name];input.disabled=busy;input.addEventListener('change',()=>{draft[name]=input.checked;draft.dirty=true;});label.append(input,el('span',t(labels[name])));form.append(label);
   }
@@ -194,6 +196,7 @@ function editor() {
 }
 async function saveDraft(allowDuplicate) {
   const values=Object.fromEntries(basic.map(name=>[name,draft[name]??(['favorite','needs_details'].includes(name)?false:'')]));
+  values.examples=(draft.examples||[]).filter(e=>Object.values(e).some(v=>v?.trim()));
   if(draft.mode==='quick')values.needs_details=true;
   else {try{Object.assign(values,morphologyValues(draft));}catch(error){notice=vocabularyError(error);failure=true;rerender();return;}}
   const request={action:'save',id:draft.id,revision:draft.revision??null,values,tags:draft.tags,allowDuplicate};
@@ -225,7 +228,8 @@ function details(word) {
   const card=el('article',null,'card word-details');
   const reviewContext=new URLSearchParams(location.hash.split('?')[1]||'').get('from')==='review'?reviewReturnContext(word.id):null;
   if(reviewContext){const resume=el('div',null,'review-resume-banner');resume.append(el('p',t('Your review is paused at word {position} of {total}.',{...reviewContext})),link(t('← Return to current review'),'#/review','button button-primary'));card.append(resume);}
-const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));if(word.example_arabic)card.append(audio(word.example_arabic));}
+const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));}
+  card.append(reviewDetails(word));
   const nav=el('nav',null,'word-navigation');nav.setAttribute('aria-label',t('Word navigation'));
   let neighbors={previous:null,next:null};
   const navigate=direction=>{if(card.isConnected&&neighbors[direction])location.hash='#/vocabulary?word='+neighbors[direction];};
@@ -236,10 +240,10 @@ const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabu
   const navOwner=owner;
   wordNeighbors(word.id,page=>listWords({...filters,favorite:browseFavorites||filters.favorite,page}),filters.page).then(result=>{if(!card.isConnected||owner!==navOwner)return;neighbors=result;if(result.page!==undefined)filters.page=result.page;previous.disabled=!result.previous;next.disabled=!result.next;}).catch(()=>{if(card.isConnected)nav.append(button('Retry navigation',()=>rerender()));});
   const list=el('dl',null,'word-detail-list');
-  for(const name of basic.filter(name=>!['arabic_word','favorite','needs_details'].includes(name))){if(!word[name])continue;list.append(el('dt',t(labels[name])),name==='word_type'?el('dd',t(word[name])):userText('dd',word[name],name.includes('arabic')?'ar':name.includes('bangla')?'bn':undefined));}
+  for(const name of basic.filter(name=>!['examples','example_arabic','example_bangla','example_english','arabic_word','favorite','needs_details'].includes(name))){if(!word[name])continue;list.append(el('dt',t(labels[name])),name==='word_type'?el('dd',t(word[name])):userText('dd',word[name],name.includes('arabic')?'ar':name.includes('bangla')?'bn':undefined));}
   list.append(el('dt',t('Tags / Decks')),userText('dd',tags.filter(tag=>word.tags.includes(tag.id)).map(tag=>tag.name).join(' · ')||t('None')));
   list.append(el('dt',t('Added')),el('dd',new Date(word.created_at).toLocaleString(getLanguage()==='bn'?'bn-BD':'en')),el('dt',t('Last edited')),el('dd',new Date(word.updated_at).toLocaleString(getLanguage()==='bn'?'bn-BD':'en')));card.append(list);
-  card.append(morphologyDetails(word));
+  card.append(examplesDetails(word),morphologyDetails(word));
   if(word.needs_details)card.append(el('p',t('Needs details'),'pill'));
   const actions=el('div',null,'vocabulary-actions');actions.append(link(t('Edit word'),'#/add-word?edit='+word.id,'button button-primary'),button(word.favorite?'Remove favorite':'Add favorite',()=>run(()=>writeVocabulary({action:'favorite',id:word.id,revision:word.revision,values:{favorite:!word.favorite}}),'Favorite updated.')),button('Delete word',()=>confirmAction('Delete this word? It will leave your collection. Learning history is preserved.',()=>run(async()=>{await writeVocabulary({action:'delete',id:word.id,revision:word.revision});location.hash='#/vocabulary';},'Word deleted.')),'button button-danger'));
   if(reviewContext)actions.prepend(link(t('← Return to current review'),'#/review','button button-primary'));
