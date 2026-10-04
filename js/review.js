@@ -58,7 +58,7 @@ export function reviewPage() {
   const summaryStatus=node('p','Loading…','settings-help');summaryStatus.setAttribute('aria-live','polite');page.append(summary,summaryStatus);
   queueMicrotask(async()=>{try{const data=await reviewSummary();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;for(const card of summary.children)card.querySelector('strong').textContent=data[card.dataset.metric];summaryStatus.textContent=data.pending?t('Pending sync: {count} reviews',{count:data.pending}):t('Today counts saved ratings, not sessions or word views.');}catch{if(page.isConnected)summaryStatus.textContent=t('Summary could not be loaded.');}});
   const body = node("section", "", "card study-card");
-  page.append(body,upcomingList());
+  const fullUpcoming=upcomingList();if(new URLSearchParams(location.hash.split('?')[1]||'').get('section')==='upcoming')page.append(fullUpcoming,body);else page.append(body,fullUpcoming);
   if (!session) {
     body.append(node("p", "Loading…"));
     const token = generation;
