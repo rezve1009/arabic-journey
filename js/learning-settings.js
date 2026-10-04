@@ -19,7 +19,7 @@ export function learningSettings() {
   const quiz = { ...s.quiz_options },
     mastery = { ...s.mastery_thresholds },
     weights = { low_accuracy: 2, ...s.weak_weights },
-    goals = { minimum_activity: 1, ...s.daily_goals };
+    goals = { minimum_activity: 1, allow_early_reviews: true, review_batch_size: 10, ...s.daily_goals };
   const collect = [];
   for (const [group, values, labels] of [
     [
@@ -64,8 +64,9 @@ export function learningSettings() {
         minimum_activity: "Minimum activity for a study day",
       },
     ],
+    ["Extra revision sessions",goals,{allow_early_reviews:"Allow multiple revision sessions per day",review_batch_size:"Words in the next review batch"}],
   ]) {
-    form.append(node("h3", group));
+    const block=node("fieldset","","learning-setting-group");block.append(node("legend",group));form.append(block);
     for (const [key, label] of Object.entries(labels)) {
       const bool = typeof values[key] === "boolean";
       const f = field(label, bool ? "checkbox" : "number", values[key]);
@@ -77,7 +78,8 @@ export function learningSettings() {
           ? ".1"
           : "1";
       }
-      form.append(f.wrap);
+      if(key==="review_batch_size"){f.input.min=1;f.input.required=true;}
+      block.append(f.wrap);if(key==="allow_early_reviews")block.append(node("p","Review the earliest upcoming words whenever you want. Today's due words keep their own schedule.","settings-help"));if(key==="reviews")block.append(node("p","A daily word target, not a limit on review sessions. Leave blank for no fixed target.","settings-help"));
       collect.push(
         () =>
           (values[key] = bool

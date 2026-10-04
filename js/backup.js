@@ -19,6 +19,7 @@ import {
   message,
 } from "./learning-ui.js";
 import { normalizeArabic, parseRoot, parseArabicList } from "./arabic-utils.js";
+export const demoVocabularyCsv="﻿\"arabic\",\"bangla\",\"english\",\"type\",\"root\",\"masdar\",\"tag\"\r\n\"كَتَبَ\",\"সে লিখেছে\",\"he wrote\",\"verb\",\"ك ت ب\",\"كِتَابَةٌ\",\"প্রাথমিক শব্দ\"\r\n\"كِتَابٌ\",\"বই\",\"book\",\"noun\",\"ك ت ب\",\"\",\"প্রাথমিক শব্দ\"\r\n\"جَمِيلٌ\",\"সুন্দর\",\"beautiful\",\"adjective\",\"\",\"\",\"প্রাথমিক শব্দ\"";
 export function csvCell(value) {
   const text = String(value ?? "");
   const safe = /^[\s]*[=+@-]/.test(text) ? "'" + text : text;
@@ -194,7 +195,7 @@ export function backupPage() {
   );
   page.append(exports);
   const imports = node("section", "", "card study-card");
-  imports.append(node("h2", "Import vocabulary or restore backup"));
+  imports.append(node("h2", "Import vocabulary or restore backup"),node("p","Download the sample, replace its three sample rows with your words, then choose the file and preview the import.","settings-help"),action("Download demo CSV",()=>download("arabic-journey-demo.csv",demoVocabularyCsv,"text/csv;charset=utf-8")),node("p","Column order: Arabic, Bengali, English, type, root, masdar, tag. The first three columns are required. Keep the header row and save as UTF-8 CSV.","settings-help"));
   const file = field("JSON or CSV file", "file");
   file.input.accept = ".json,.csv";
   const paste = node("textarea");

@@ -6,6 +6,7 @@ import {scheduleForm,acknowledgeScheduleRevision} from './srs-settings.js';
 import { getLanguage, t, translate } from './i18n.js';
 import { displayArabic, futureArabic } from './arabic-utils.js';
 
+let selectedSettings = '';
 let email = '';
 let codeSent = false;
 let busy = false;
@@ -120,6 +121,12 @@ export function settingsPage() {
     message.textContent = t(notice);
     page.querySelector('.page-heading').after(message);
   }
+  const grid=page.querySelector('.settings-grid'),nav=document.createElement('nav');nav.className='settings-tabs';nav.setAttribute('aria-label',t('Settings categories'));
+  const categories=[['account','Account'],['schedule','Revision'],['learning','Learning preferences'],['display','Arabic Display'],['notifications','Notifications'],['tools','Tools']];
+  const cards=[...grid.children];for(const card of cards){const heading=card.querySelector('h2')?.textContent;card.dataset.category=card.id==='account-section'||card.id==='preferences-section'?'account':card.id==='schedule-section'?'schedule':card.id==='arabic-display-section'?'display':heading===t('Learning preferences')||heading==='Learning preferences'?'learning':card.id==='notifications-section'?'notifications':'tools';if(card.dataset.category==='learning'||card.dataset.category==='schedule')card.classList.add('settings-wide');}
+  const requested=new URLSearchParams(location.hash.split('?')[1]||'').get('section');if(['schedule','notifications','learning'].includes(requested))selectedSettings=requested;if(!cards.some(card=>card.dataset.category===selectedSettings))selectedSettings=account.status==='ready'?'learning':'account';
+  const show=key=>{selectedSettings=key;for(const card of cards)card.hidden=card.dataset.category!==key;for(const button of nav.children)button.setAttribute('aria-pressed',String(button.dataset.category===key));};
+  for(const [key,label]of categories){if(!cards.some(card=>card.dataset.category===key))continue;const tab=button(label,()=>show(key));tab.dataset.category=key;nav.append(tab);}grid.before(nav);show(selectedSettings);
   if (busy) page.querySelectorAll('button,input,select').forEach(control => control.disabled = true);
   const section=new URLSearchParams(location.hash.split('?')[1]||'').get('section');if(['notifications','schedule'].includes(section))queueMicrotask(()=>page.querySelector('#'+section+'-section')?.scrollIntoView({block:'start'}));
   translate(page);

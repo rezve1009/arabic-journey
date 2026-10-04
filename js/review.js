@@ -3,7 +3,7 @@ import {reviewDate} from './srs-details.js';
 import {t}from './i18n.js';
 import {practiceCount,reviewSummary}from './review-tools.js';
 import { getAccount, subscribeAccount } from "./supabase.js";
-import { getDueWords, getReviewInfo, recordFixedReview } from "./srs-data.js";
+import { getUpcomingWords, getDueWords, getReviewInfo, recordFixedReview } from "./srs-data.js";
 import { getWord, listWords, listTags } from "./vocabulary-data.js";
 import { fixedTransition } from "./srs.js";
 import { displayArabic } from "./arabic-utils.js";
@@ -113,6 +113,7 @@ export function reviewPage() {
             node("p", "You're done for today. No words are currently due."),
           );
         const upcoming=node('section','','upcoming-review');upcoming.append(node('h3','Upcoming words'),node('p','The next five scheduled words. Due words appear above.','settings-help'));if(due.upcoming?.length){for(const w of due.upcoming){const row=link('', '#/vocabulary?word='+w.id);row.className='upcoming-word';row.append(content('strong',w.arabic_word,'arabic'),content('span',reviewDate(w.next_review_at)));upcoming.append(row);}}else upcoming.append(node('p','No upcoming words.'));body.append(upcoming);
+        const advance=node("section","","advance-review");advance.append(node("h3","Do the next review now"),node("p","Review upcoming words in scheduled order. Ratings are saved and only those words move to their next review. Today's due queue is unchanged.","settings-help"));const advanceLimit=fieldCount();const advanceLabel=node("label","Words in the next review batch");advanceLabel.append(advanceLimit);advance.append(advanceLabel);const advanceStart=action("Start next review",async()=>{if(advanceStart.disabled)return;let wanted;try{wanted=practiceCount(advanceLimit.value);}catch{advanceLimit.setCustomValidity(t("Enter a whole number from 1 to 1000."));advanceLimit.reportValidity();return;}advanceStart.disabled=true;try{const batch=await getUpcomingWords(wanted);if(!page.isConnected||account.user.id!==getAccount().user?.id)return;if(!batch.words.length){advance.append(node("p","No upcoming words."));return;}start(batch.words,"recorded_practice",wanted,"upcoming");}catch(e){message(advance,e);}finally{if(advance.isConnected)advanceStart.disabled=false;}},true);advanceStart.disabled=account.settings.daily_goals?.allow_early_reviews===false;if(advanceStart.disabled)advance.append(node("p","Enable extra revision sessions in Settings."));advance.append(advanceStart,link("Revision settings","#/settings?section=learning"));body.append(advance);
         const practice = node("div", "", "practice-controls");
         practice.append(node("h3", "Random Practice"),node('p','Choose your words and practise at your own pace.','settings-help'));
         const kind = node("select");
@@ -214,6 +215,7 @@ export function reviewPage() {
     });
     return page;
   }
+  if(session.kind==='upcoming')body.append(node('h2','Upcoming review session'));
   const modeNote=node('p',session.mode==='unrecorded'?'Practice is not recorded. Your review schedule will stay unchanged.':'Ratings will be saved and your review schedule will change.','practice-mode-note');body.append(modeNote);
   if(session.requested>session.words.length)body.append(node('p',t('Requested {requested}; {available} matching words are available.',{requested:session.requested,available:session.words.length}),'settings-help'));
   if (session.index >= session.words.length) {
@@ -230,6 +232,7 @@ export function reviewPage() {
         session = null;
         render();
       }),
+      ...(session.kind==='upcoming'?[action("Next upcoming batch",()=>{session=null;render();},true)]:[]),
       link("Back to vocabulary", "#/vocabulary"),
     );
     return finish(page);
@@ -381,9 +384,10 @@ export function reviewPage() {
   );
   return finish(page);
 }
-function start(words, mode, requested=words.length) {
+function start(words, mode, requested=words.length,kind="regular") {
   session = {
     words,
+    kind,
     requested,
     mode,
     index: 0,
@@ -432,3 +436,5 @@ async function submit(rating, body) {
 }
 
 export function reviewReturnContext(wordId){return session&&owner===getAccount().user?.id&&session.index<session.words.length&&session.words[session.index].id===wordId?{position:session.index+1,total:session.words.length}:null;}
+
+function fieldCount(){const input=node('input');input.type='number';input.min=1;input.max=1000;input.step=1;input.value=getAccount().settings.daily_goals?.review_batch_size||10;input.setAttribute('aria-label','Words in the next review batch');input.addEventListener('input',()=>input.setCustomValidity(''));return input;}

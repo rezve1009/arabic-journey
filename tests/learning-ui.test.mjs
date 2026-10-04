@@ -328,7 +328,17 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     await wait(()=>posted.length===1);
     assert.equal(posted[0].type,'APPLY_UPDATE');
     assert(!button('Reload app'));
+    unmountReview();location.hash='#/review';document.body.replaceChildren(reviewPage());
+    if(button('Review again'))button('Review again').click();
+    await wait(()=>button('Start next review'));
+    document.querySelector('[aria-label="Words in the next review batch"]').value='1';button('Start next review').click();
+    await wait(()=>button('Show Answer'));assert(document.body.textContent.includes('Upcoming review session'));button('Show Answer').click();button('Good').click();
+    await wait(()=>button('Next upcoming batch'));assert(document.body.textContent.includes('Session complete'));unmountReview();
   } finally {
     await db.close();
   }
+});
+
+test('Demo CSV roundtrips Unicode and matches the supported seven-column import format',async()=>{
+ const {demoVocabularyCsv,parseCsv}=await import('../js/backup.js');const rows=parseCsv(demoVocabularyCsv.replace(/^\ufeff/,''));assert.deepEqual(rows[0],['arabic','bangla','english','type','root','masdar','tag']);assert.equal(rows.length,4);assert.equal(rows[1][0],'كَتَبَ');assert.equal(rows[1][1],'সে লিখেছে');assert.equal(rows[2][3],'noun');assert.equal(rows[3][6],'প্রাথমিক শব্দ');
 });

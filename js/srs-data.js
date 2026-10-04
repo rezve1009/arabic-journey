@@ -1,3 +1,6 @@
+import {getCache} from './storage.js';
+import {getAccount} from './supabase.js';
+import {selectUpcoming} from './review-tools.js';
 import {cloudWrite,cachedDue,cachedReview} from './sync.js';
 import {vocabularyRequest} from './vocabulary-data.js';
 export const getDueWords=(page=0)=>!navigator.onLine?cachedDue(page):vocabularyRequest(client=>client.rpc('fixed_due',{p_page:page}));
@@ -11,3 +14,5 @@ export async function getReviewInfo(word){
 // Phase 6 uses this command with the displayed state revision. Reuse its operation
 // UUID for a failed request retry; the server acknowledges the original event.
 export const recordFixedReview=({operation,word,revision,rating,responseMs=null,mode='scheduled'})=>cloudWrite('fixed_review',{p_operation:operation,p_word:word,p_revision:revision,p_rating:rating,p_response_ms:responseMs,p_mode:mode});
+
+export async function getUpcomingWords(limit=10){if(navigator.onLine)return vocabularyRequest(c=>c.rpc('fixed_upcoming',{p_limit:limit}));const uid=getAccount().user.id;const [words,states]=await Promise.all([getCache(uid,'words'),getCache(uid,'word_review_state')]);return selectUpcoming(words,states,limit);}

@@ -29,7 +29,7 @@ export async function initializePwa(){
  return registration;
 }
 export function pwaSettings(){
- const section=node('section','','card settings-card');section.append(node('h2','Install Arabic Journey'),node('p','App release: 2026-10-04 · Examples, schedules and history'));
+ const section=node('section','','card settings-card');section.append(node('h2','Install Arabic Journey'),node('p','App release: 2026-10-04 · Early reviews and improved settings'));
  if(installPrompt)section.append(action('Install app',async()=>{await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;signal();}));
  else section.append(node('p','Use your browser menu to install. On iPhone: Share → Add to Home Screen.'));
  section.append(action('Check for updates',async()=>{try{await registration?.update();showUpdate();if(registration?.waiting)signal();if(!registration?.waiting&&!registration?.installing&&!reloadAvailable)section.append(node('p','No update found. You are using the current app version.'));}catch{section.append(node('p','Could not check for updates. Check your connection.'));}}));

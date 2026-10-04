@@ -102,7 +102,7 @@ function choices(values,selected,change,label) {
 function tagOptions() { return tags.map(tag=>[tag.id,`${tag.kind==='deck'?t('Deck'):t('Tag')}: ${tag.name}`]); }
 function collection(content,favorites,token) {
   browseFavorites=favorites;
-  const toolbar=el('form',null,'vocabulary-filters');
+  const toolbar=el('form',null,'vocabulary-filters card');const mainFilters=el('div',null,'vocabulary-main-filters'),advanced=el('details',null,'vocabulary-advanced');advanced.append(el('summary',t('More filters')));const extra=el('div',null,'vocabulary-extra-filters');advanced.append(extra);
   const search=el('input');search.type='search';search.value=filters.search;search.placeholder=t('Search words, meanings, examples or tags');search.setAttribute('aria-label',t('Search vocabulary'));search.maxLength=200;
   const result=el('div');
   const refresh=async()=>{
@@ -125,15 +125,15 @@ function collection(content,favorites,token) {
   const changed=()=>{filters.page=0;refresh();};
   search.addEventListener('input',()=>{filters.search=search.value;clearTimeout(timer);timer=setTimeout(changed,250);});
   toolbar.addEventListener('submit',event=>{event.preventDefault();clearTimeout(timer);changed();});
-  toolbar.append(search,choices([['','All types'],...types.map(type=>[type,type])],filters.type,value=>{filters.type=value;changed();},'Word type'),choices([['','All words'],['needs-details','Needs details'],['new','New words'],['today','Added today'],['learning','Learning'],['reviewing','Reviewing']],filters.status,value=>{filters.status=value;changed();},'Word status'),choices([['','All tags / decks'],...tagOptions()],filters.tag,value=>{filters.tag=value;changed();},'Tags / Decks'));
-  if(!favorites){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!filters.favorite;input.addEventListener('change',()=>{filters.favorite=input.checked;changed();});label.append(input,el('span',t('Favorites only')));toolbar.append(label);}
-  const rootLabel=el('label',t('Root filter'));const root=el('input');root.lang='ar';root.dir='rtl';root.value=filters.root;root.placeholder=t('ك ت ب or د ح ر ج');root.maxLength=40;root.addEventListener('input',()=>{filters.root=root.value;clearTimeout(timer);timer=setTimeout(changed,250);});rootLabel.append(root);toolbar.append(rootLabel);
+  mainFilters.append(search,choices([['','All types'],...types.map(type=>[type,type])],filters.type,value=>{filters.type=value;changed();},'Word type'),choices([['','All words'],['needs-details','Needs details'],['new','New words'],['today','Added today'],['learning','Learning'],['reviewing','Reviewing']],filters.status,value=>{filters.status=value;changed();},'Word status'),choices([['','All tags / decks'],...tagOptions()],filters.tag,value=>{filters.tag=value;changed();},'Tags / Decks'));
+  if(!favorites){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!filters.favorite;input.addEventListener('change',()=>{filters.favorite=input.checked;changed();});label.append(input,el('span',t('Favorites only')));mainFilters.append(label);}
+  const rootLabel=el('label',t('Root filter'));const root=el('input');root.lang='ar';root.dir='rtl';root.value=filters.root;root.placeholder=t('ك ت ب or د ح ر ج');root.maxLength=40;root.addEventListener('input',()=>{filters.root=root.value;clearTimeout(timer);timer=setTimeout(changed,250);});rootLabel.append(root);extra.append(rootLabel);
   const searchOptions=el('fieldset',null,'search-options');searchOptions.append(el('legend',t('Search comparison')));
-  for(const [key,text]of[['harakah','Ignore Harakah'],['tatweel','Ignore Tatweel'],['unicode','Normalize Unicode']]){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=filters[key];input.addEventListener('change',()=>{filters[key]=input.checked;changed();});label.append(input,el('span',t(text)));searchOptions.append(label);}toolbar.append(searchOptions);
+  for(const [key,text]of[['harakah','Ignore Harakah'],['tatweel','Ignore Tatweel'],['unicode','Normalize Unicode']]){const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=filters[key];input.addEventListener('change',()=>{filters[key]=input.checked;changed();});label.append(input,el('span',t(text)));searchOptions.append(label);}extra.append(searchOptions);
   for(const [name,label] of [['from','Added from (UTC)'],['to','Added through (UTC)']]) {
-    const wrapper=el('label',t(label));const input=el('input');input.type='date';input.value=filters[name];input.addEventListener('change',()=>{filters[name]=input.value;changed();});wrapper.append(input);toolbar.append(wrapper);
+    const wrapper=el('label',t(label));const input=el('input');input.type='date';input.value=filters[name];input.addEventListener('change',()=>{filters[name]=input.value;changed();});wrapper.append(input);extra.append(wrapper);
   }
-  toolbar.append(button('Clear filters',()=>{Object.assign(filters,filterDefaults);if(location.hash.includes('?'))location.hash='#/vocabulary';else rerender();}));
+  toolbar.append(mainFilters,advanced);toolbar.append(button('Clear filters',()=>{Object.assign(filters,filterDefaults);if(location.hash.includes('?'))location.hash='#/vocabulary';else rerender();}));
   content.append(toolbar,result);refresh();
   content.append(button('Add demo words',()=>confirmAction('Add three demo words to your account?',()=>run(async()=>{
     if(!demoRequests.length)demoRequests=[
@@ -229,13 +229,12 @@ function details(word) {
   const reviewContext=new URLSearchParams(location.hash.split('?')[1]||'').get('from')==='review'?reviewReturnContext(word.id):null;
   if(reviewContext){const resume=el('div',null,'review-resume-banner');resume.append(el('p',t('Your review is paused at word {position} of {total}.',{...reviewContext})),link(t('← Return to current review'),'#/review','button button-primary'));card.append(resume);}
 const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabulary'),'#/vocabulary','button button-secondary'),link(t(word.needs_details?'Add details':'Edit word'),'#/add-word?edit='+word.id,'button button-primary'));card.append(top,userText('h2',word.arabic_word,'ar'));if('speechSynthesis'in window){card.append(audio(word.arabic_word));}
-  card.append(reviewDetails(word));
   const nav=el('nav',null,'word-navigation');nav.setAttribute('aria-label',t('Word navigation'));
   let neighbors={previous:null,next:null};
   const navigate=direction=>{if(card.isConnected&&neighbors[direction])location.hash='#/vocabulary?word='+neighbors[direction];};
   const previous=button('← Previous word',()=>navigate('previous')),next=button('Next word →',()=>navigate('next'));
   previous.disabled=true;next.disabled=true;nav.append(previous,next);card.insertBefore(nav,card.firstChild);
-  card.append(el('p',t('On your phone, swipe left for the next word and right for the previous word.'),'settings-help'));
+
   bindWordSwipe(card,navigate);
   const navOwner=owner;
   wordNeighbors(word.id,page=>listWords({...filters,favorite:browseFavorites||filters.favorite,page}),filters.page).then(result=>{if(!card.isConnected||owner!==navOwner)return;neighbors=result;if(result.page!==undefined)filters.page=result.page;previous.disabled=!result.previous;next.disabled=!result.next;}).catch(()=>{if(card.isConnected)nav.append(button('Retry navigation',()=>rerender()));});
@@ -247,7 +246,7 @@ const top=el('div',null,'word-detail-actions');top.append(link(t('Back to vocabu
   if(word.needs_details)card.append(el('p',t('Needs details'),'pill'));
   const actions=el('div',null,'vocabulary-actions');actions.append(link(t('Edit word'),'#/add-word?edit='+word.id,'button button-primary'),button(word.favorite?'Remove favorite':'Add favorite',()=>run(()=>writeVocabulary({action:'favorite',id:word.id,revision:word.revision,values:{favorite:!word.favorite}}),'Favorite updated.')),button('Delete word',()=>confirmAction('Delete this word? It will leave your collection. Learning history is preserved.',()=>run(async()=>{await writeVocabulary({action:'delete',id:word.id,revision:word.revision});location.hash='#/vocabulary';},'Word deleted.')),'button button-danger'));
   if(reviewContext)actions.prepend(link(t('← Return to current review'),'#/review','button button-primary'));
-  card.append(actions);return card;
+  card.append(actions,reviewDetails(word));return card;
 }
 function tagManager() {
   const section=el('section',null,'card tag-manager');
