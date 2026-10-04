@@ -155,9 +155,9 @@ function wordCard(word) {
 function editor() {
   const form=el('form',null,'card word-editor');form.id='word-editor-form';
   const top=el('div',null,'editor-top-actions');
-  top.append(link(t(draft.revision?'Back to word':'Back to vocabulary'),draft.revision?'#/vocabulary?word='+draft.id:'#/vocabulary','button button-secondary'));
+  top.append(el('strong',t(draft.revision?'Edit word':'New word'),'editor-title'));
   const topSave=el('button',t(busy?'Saving…':draft.revision?'Save changes':'Save word'),'button button-primary');topSave.type='submit';topSave.disabled=busy;top.append(topSave);form.append(top);
-  const modes=el('div',null,'vocabulary-actions');
+  const modes=el('div',null,'editor-mode-switch');
   for(const [value,label]of(draft.revision?[]:[['quick','Quick Add'],['full','Full Add']])){const node=button(label,()=>{draft.mode=value;rerender();});node.setAttribute('aria-pressed',String(draft.mode===value));modes.append(node);}
   form.append(modes,el('p',t('Arabic, Bengali and English are required. Quick Add marks a word as needing details.'),'settings-help'));
   const fields=draft.mode==='quick'?['arabic_word','bangla_meaning','english_meaning']:basic.filter(name=>!['examples','example_arabic','example_bangla','example_english','favorite','needs_details'].includes(name));
@@ -178,14 +178,15 @@ function editor() {
     }
     input.disabled=busy;label.append(input);grid.append(label);
   }
-  form.append(grid);
-  if(draft.mode==='full'){form.append(examplesEditor(draft,{disabled:busy}));renderGrammar();form.append(grammar);}
+  const core=el('section',null,'editor-panel');core.append(el('h2',t('Word and meanings')),grid);form.append(core);
+  if(draft.mode==='full'){const examples=examplesEditor(draft,{disabled:busy});examples.classList.add('editor-panel');form.append(examples);renderGrammar();grammar.className='editor-panel editor-grammar';form.append(grammar);}
+  const organize=el('section',null,'editor-panel editor-organize');organize.append(el('h2',t('Organize your word')));
   if(draft.mode==='full')for(const name of ['favorite','needs_details']){
-    const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!draft[name];input.disabled=busy;input.addEventListener('change',()=>{draft[name]=input.checked;draft.dirty=true;});label.append(input,el('span',t(labels[name])));form.append(label);
+    const label=el('label',null,'checkbox-label');const input=el('input');input.type='checkbox';input.checked=!!draft[name];input.disabled=busy;input.addEventListener('change',()=>{draft[name]=input.checked;draft.dirty=true;});label.append(input,el('span',t(labels[name])));organize.append(label);
   }
   const selected=tagPicker(tags,{selected:draft.tags,disabled:busy,onChange:values=>{draft.tags=values;draft.dirty=true;}});
-  form.append(selected,link(t('Manage tags / decks'),'#/tags'));
-  const actions=el('div',null,'vocabulary-actions');
+  organize.append(selected,link(t('Manage tags / decks'),'#/tags'));form.append(organize);
+  const actions=el('div',null,'vocabulary-actions editor-save-actions');
   const submit=el('button',t(busy?'Saving…':draft.revision?'Save changes':'Save word'),'button button-primary');submit.type='submit';submit.disabled=busy;
   actions.append(submit,link(t(draft.revision?'Back to word':'Back to vocabulary'),draft.revision?'#/vocabulary?word='+draft.id:'#/vocabulary','button button-secondary'),button(draft.revision?'Discard changes':'Clear draft',()=>confirmAction(draft.revision?'Discard your unsaved changes?':'Clear this draft?',()=>{const destination=draft.revision?'#/vocabulary?word='+draft.id:'#/add-word';draft=null;editKey=null;location.hash=destination;rerender();})));
   if(draft.revision||failure)actions.append(link(t('Open latest word'),'#/vocabulary?word='+draft.id),button('Use latest version',()=>confirmAction('Replace this draft with the latest saved version?',()=>run(async()=>{const latest=await getWord(draft.id);draft={...hydrateMorphology(latest),mode:'full'};}))));

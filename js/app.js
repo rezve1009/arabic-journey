@@ -101,6 +101,7 @@ function renderRoute(route, navigate = false) {
   translate(page);
   document.getElementById('main').replaceChildren(page);
   document.getElementById('breadcrumb-title').textContent = t(route.title);
+  document.getElementById('breadcrumb-title').href = '#/'+route.id;
   document.title = `${t(route.title)} · ${t('Arabic Journey')}`;
   document.querySelectorAll('[data-route]').forEach(link => {
     if (link.dataset.route === route.id) link.setAttribute('aria-current', 'page');

@@ -330,3 +330,7 @@ Object.assign(bn,{"Recall a word, check its meaning, then rate your memory.":"�
 Object.assign(bn,{'Pagination':'পৃষ্ঠা নির্বাচন','Full upcoming review list':'আসন্ন রিভিশনের পূর্ণ তালিকা','View all upcoming reviews':'সব আসন্ন রিভিশন দেখুন','{count} upcoming words':'{count}টি আসন্ন শব্দ','All future reviews in time order. Words already due appear in today’s review.':'আসন্ন সব শব্দ রিভিউ সময়ের ক্রমে। সময় হয়ে যাওয়া শব্দ আজকের রিভিশনে দেখাবে।'});
 
 Object.assign(bn,{'Search options affect matching only; your saved Arabic stays unchanged.':'এই টিকগুলো শুধু অনুসন্ধানে মিল খোঁজার নিয়ম বদলায়; সংরক্ষিত আরবি লেখা অপরিবর্তিত থাকে।','App release: 2026-10-04 · Full upcoming list and page navigation':'অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · আসন্ন পূর্ণ তালিকা ও পৃষ্ঠা নির্বাচন'});
+
+Object.assign(bn,{'Breadcrumb':'পেজের পথ','Word and meanings':'শব্দ ও অর্থ','Organize your word':'শব্দ সাজিয়ে রাখুন','App release: 2026-10-04 · Organized entry and revision':'অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · নতুন শব্দ যোগ ও রিভিশন ডিজাইন'});
+
+Object.assign(bn,{'New word':'নতুন শব্দ'});

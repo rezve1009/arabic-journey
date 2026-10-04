@@ -58,8 +58,9 @@ export function reviewPage() {
   const summaryStatus=node('p','Loading…','settings-help');summaryStatus.setAttribute('aria-live','polite');page.append(summary,summaryStatus);
   queueMicrotask(async()=>{try{const data=await reviewSummary();if(!page.isConnected||getAccount().user?.id!==account.user.id)return;for(const card of summary.children)card.querySelector('strong').textContent=data[card.dataset.metric];summaryStatus.textContent=data.pending?t('Pending sync: {count} reviews',{count:data.pending}):t('Today counts saved ratings, not sessions or word views.');}catch{if(page.isConnected)summaryStatus.textContent=t('Summary could not be loaded.');}});
   const body = node("section", "", "card study-card");
-  const fullUpcoming=upcomingList();if(new URLSearchParams(location.hash.split('?')[1]||'').get('section')==='upcoming')page.append(fullUpcoming,body);else page.append(body,fullUpcoming);
+  const fullUpcoming=upcomingList();page.append(body,fullUpcoming);
   if (!session) {
+    body.classList.remove("card");body.classList.add("review-setup");
     body.append(node("p", "Loading…"));
     const token = generation;
     queueMicrotask(async () => {
@@ -71,7 +72,7 @@ export function reviewPage() {
           owner !== getAccount().user?.id
         )
           return;
-        body.replaceChildren(
+        const duePanel=node("section","","card due-review-panel");body.replaceChildren(duePanel);duePanel.append(
           node("h2", "Today's review"),
           content(
             "p",
@@ -104,16 +105,16 @@ export function reviewPage() {
         const stats = node("div", "", "study-preview");stats.setAttribute('aria-label','Due word categories');
         for (const [k, v] of Object.entries(counts))
           {const cell=node('div','','due-category');cell.append(node('span',k),content('strong',v));stats.append(cell);}
-        body.append(stats);
+        duePanel.append(stats);
         if (all.length)
-          body.append(
+          duePanel.append(
             action("Start Review", () => start(all, "scheduled"), true),
           );
         else
-          body.append(
+          duePanel.append(
             node("p", "You're done for today. No words are currently due."),
           );
-        body.append(link('View all upcoming reviews','#/review?section=upcoming'));
+        duePanel.append(link('View all upcoming reviews','#/review?section=upcoming'));
         const advance=node("section","","advance-review");advance.append(node("h3","Do the next review now"),node("p","Review upcoming words in scheduled order. Ratings are saved and only those words move to their next review. Today's due queue is unchanged.","settings-help"));const advanceLimit=fieldCount();const advanceLabel=node("label","Words in the next review batch");advanceLabel.append(advanceLimit);advance.append(advanceLabel);const advanceStart=action("Start next review",async()=>{if(advanceStart.disabled)return;let wanted;try{wanted=practiceCount(advanceLimit.value);}catch{advanceLimit.setCustomValidity(t("Enter a whole number from 1 to 1000."));advanceLimit.reportValidity();return;}advanceStart.disabled=true;try{const batch=await getUpcomingWords(wanted);if(!page.isConnected||account.user.id!==getAccount().user?.id)return;if(!batch.words.length){advance.append(node("p","No upcoming words."));return;}start(batch.words,"recorded_practice",wanted,"upcoming");}catch(e){message(advance,e);}finally{if(advance.isConnected)advanceStart.disabled=false;}},true);advanceStart.disabled=account.settings.daily_goals?.allow_early_reviews===false;if(advanceStart.disabled)advance.append(node("p","Enable extra revision sessions in Settings."));advance.append(advanceStart,link("Revision settings","#/settings?section=learning"));body.append(advance);
         const practice = node("div", "", "practice-controls");
         practice.append(node("h3", "Random Practice"),node('p','Choose your words and practise at your own pace.','settings-help'));
@@ -209,6 +210,7 @@ export function reviewPage() {
         const modeHint=node("p","Practice is not recorded. Your review schedule will stay unchanged.","practice-mode-note");label.className="practice-record-label";record.addEventListener("change",()=>{modeHint.textContent=t(record.checked?"Ratings will be saved and your review schedule will change.":"Practice is not recorded. Your review schedule will stay unchanged.");});practice.append(modeHint);
         body.append(practice);
         finish(page);
+        if(fullUpcoming.open)requestAnimationFrame(()=>{if(fullUpcoming.isConnected)fullUpcoming.scrollIntoView({block:"start"});});
       } catch (e) {
         body.replaceChildren(action("Retry", () => render()));
         message(body, e);
