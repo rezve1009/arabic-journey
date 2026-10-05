@@ -50,7 +50,7 @@ const request = async (name, args) => {
       dropReviewResponse = false;
       return { error: new TypeError("Injected lost response") };
     }
-    if(name==='quiz_start'&&dropQuizResponse){dropQuizResponse=false;return {error:new TypeError('Injected lost quiz response')};}
+    if(name==='quiz_plan_start'&&dropQuizResponse){dropQuizResponse=false;return {error:new TypeError('Injected lost quiz response')};}
     return { data, error: null };
   } catch (e) {
     return { data: null, error: e };
@@ -212,7 +212,7 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     mountQuiz();
     await wait(()=>document.body.textContent.includes('Your older typing quiz'));
     assert((await readStore('meta',uid+':archived-quiz:'+oldQuiz.id)).quiz);
-    assert(!document.querySelector('fieldset'));
+    assert(document.querySelector('.quiz-directions'),'optional direction selection is available');
     document.querySelector('input[type=number]').value='2';
     button('Start Quiz').click();
     await wait(()=>document.querySelector('.mcq-options'));

@@ -75,7 +75,7 @@ export function reviewPage() {
           owner !== getAccount().user?.id
         )
           return;
-        const duePanel=node("section","","card due-review-panel");body.replaceChildren(duePanel);duePanel.append(
+        const duePanel=node("section","","card due-review-panel");duePanel.id='scheduled-review';body.replaceChildren(duePanel);duePanel.append(node('p','Your next learning step','eyebrow'),
           node("h2", "Today's review"),
           content(
             "p",
@@ -119,7 +119,7 @@ export function reviewPage() {
           );
         duePanel.append(link('View all upcoming reviews','#/review?section=upcoming'));
         const advance=node("section","","advance-review");advance.append(node("h3","Do the next review now"),node("p","Review upcoming words in scheduled order. Ratings are saved and only those words move to their next review. Today's due queue is unchanged.","settings-help"));const advanceLimit=fieldCount();const advanceLabel=node("label","Words in the next review batch");advanceLabel.append(advanceLimit);advance.append(advanceLabel);const advanceStart=action("Start next review",async()=>{if(advanceStart.disabled)return;let wanted;try{wanted=practiceCount(advanceLimit.value);}catch{advanceLimit.setCustomValidity(t("Enter a whole number from 1 to 1000."));advanceLimit.reportValidity();return;}advanceStart.disabled=true;try{const batch=await getUpcomingWords(wanted);if(!page.isConnected||account.user.id!==getAccount().user?.id)return;if(!batch.words.length){advance.append(node("p","No upcoming words."));return;}start(batch.words,"recorded_practice",wanted,"upcoming");}catch(e){message(advance,e);}finally{if(advance.isConnected)advanceStart.disabled=false;}},true);advanceStart.disabled=account.settings.daily_goals?.allow_early_reviews===false;if(advanceStart.disabled)advance.append(node("p","Enable extra revision sessions in Settings."));advance.append(advanceStart,link("Revision settings","#/settings?section=learning"));body.append(advance);
-        const practice = node("div", "", "practice-controls");
+        const practice = node("div", "", "practice-controls");practice.id='random-practice';
         practice.append(node("h3", "Random Practice"),node('p','Choose your words and practise at your own pace.','settings-help'));
         const kind = node("select");
         kind.setAttribute("aria-label", "Practice selection");

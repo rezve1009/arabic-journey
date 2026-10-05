@@ -1,4 +1,5 @@
 import { readStore, atomic } from "./storage.js";
+import {t}from './i18n.js';
 import { getAccount, subscribeAccount } from "./supabase.js";
 import { vocabularyRequest } from "./vocabulary-data.js";
 import { normalizeArabic, displayArabic, pronouns } from "./arabic-utils.js";
@@ -65,6 +66,8 @@ export function setQuizRenderer(fn) {
 }
 export function quizPage() {
   const page = shell("Daily Quiz");
+  page.classList.add('quiz-page');
+  page.querySelector('.page-heading').append(node('p','Build your vocabulary, one quiz round at a time.','page-description'));
   if (!ready(page)) return finish(page);
   const account = getAccount();
   if (owner !== account.user.id) {
@@ -73,6 +76,9 @@ export function quizPage() {
     startOp = null;
   }
   const card = node("section", "", "card study-card");
+  const coverage=node('section','','card quiz-coverage');page.append(coverage);
+  if(!quiz||quiz.saved)queueMicrotask(async()=>{try{const status=await vocabularyRequest(c=>c.rpc('quiz_coverage_status'));if(page.isConnected&&account.user.id===getAccount().user?.id)showCoverage(coverage,status);}catch{if(page.isConnected)coverage.append(node('p','Coverage could not be loaded.'));}});
+  else showCoverage(coverage,{round:quiz.settings_snapshot?.coverage_round||1,total:quiz.settings_snapshot?.coverage_total||0,covered:quiz.settings_snapshot?.coverage_done||0});
   page.append(card);
   if (!quiz) {
     queueMicrotask(async () => {
@@ -98,24 +104,27 @@ export function quizPage() {
     const count = field("Question count", "number", prefs.question_count);
     count.input.min = 1;
     count.input.max = 100;
-    const weak = field("Weak word percentage", "number", prefs.weak_percentage);
-    weak.input.min = 0;
+    const weak = field("New words (%)", "number", 60);
+    weak.input.min = 1;
     weak.input.max = 100;
     const newWords = field("Include new words", "checkbox");
-    newWords.input.checked = prefs.include_new;
+    newWords.input.checked = true;
     const mastered = field("Include mastered words", "checkbox");
-    mastered.input.checked = prefs.include_mastered;
-    card.append(
-      count.wrap,
+    mastered.input.checked = true;
+    const optional=node('details','','quiz-options');optional.append(node('summary','Optional quiz settings'));
+    const directionSet=node('fieldset','','quiz-directions');directionSet.append(node('legend','Question directions'));
+    const directions=[];
+    for(const [value,label]of [['bangla_arabic','Bengali → Arabic'],['arabic_bangla','Arabic → Bengali'],['arabic_english','Arabic → English'],['english_arabic','English → Arabic']]){const input=field(label,'checkbox');input.input.checked=true;directions.push({value,input:input.input});directionSet.append(input.wrap);}
+    optional.append(weak.wrap,node('p','The remaining questions repeat words covered in this round. Available words fill any shortage.','settings-help'),directionSet,newWords.wrap,mastered.wrap,node('p','Keep all directions and both word groups enabled to cover your full eligible collection.','settings-help'));
+    card.append(node('h2','Prepare your quiz'),count.wrap,
       node("p", "Only MCQ questions are used. Choose an option to answer."),
-      node("p", "MCQs mix Bengali, Arabic and English. Options come from your own words."),
-      weak.wrap,
-      newWords.wrap,
-      mastered.wrap,
+      node('p','Each quiz uses different words. Completed, saved quizzes count toward coverage.','settings-help'),optional,
       action(
         "Start Quiz",
         async () => {
           if (busy) return;
+          const chosen=directions.filter(d=>d.input.checked).map(d=>d.value);
+          if(!chosen.length){card.append(node('p','Choose at least one question direction.','feedback is-error'));return;}
           const selected = ["multiple_choice"];
           if (
             !selected.length ||
@@ -128,13 +137,13 @@ export function quizPage() {
           const startButton=card.querySelector('button');
           startButton.disabled=true;
           const pending=node('p','Preparing your quiz…','feedback');pending.setAttribute('role','status');card.append(pending);
-          const options={p_count:Number(count.input.value),p_types:selected,p_weak:Number(weak.input.value),p_new:newWords.input.checked,p_mastered:mastered.input.checked};
+          const options={p_count:Number(count.input.value),p_new_percent:Number(weak.input.value),p_directions:chosen,p_new:newWords.input.checked,p_mastered:mastered.input.checked};
           const signature=JSON.stringify(options);
           if(startSignature!==signature){startOp=null;startSignature=signature;}
           startOp ??= crypto.randomUUID();
           try {
             const result = await vocabularyRequest((c) =>
-              c.rpc("quiz_start", {
+              c.rpc("quiz_plan_start", {
                 p_operation: startOp,
                 ...options,
               }),
@@ -230,6 +239,7 @@ export function quizPage() {
     return finish(page);
   }
   const q = quiz.questions[quiz.index];
+  if(typeof q.fresh==='boolean')card.append(node('span',q.fresh?'New in this round':'Previously covered','quiz-word-badge'));
   card.dataset.questionId=q.id;
   card.append(
     content("p", quiz.index + 1 + " / " + quiz.questions.length),
@@ -346,4 +356,6 @@ async function save(card) {
 }
 
 function mcqSession(session){return session.questions?.length>0&&session.questions.every(q=>q.type==='multiple_choice'&&q.choices?.length>=2);}
+function showCoverage(panel,status){panel.replaceChildren(node('p','Collection coverage','eyebrow'),content('h2',String(status.covered)+' / '+String(status.total)),node('p','Words covered in this round'));const bar=node('progress');bar.max=Math.max(1,status.total);bar.value=status.covered;bar.setAttribute('aria-label',t('Collection coverage'));panel.append(bar,content('p',''+tRound(status.round)),node('p',status.total&&status.covered>=status.total?'Round complete! The next quiz starts a new round.':'Uncovered words come first. Earlier words return for recall.','settings-help'));}
+function tRound(round){return t('Round {count}',{count:round});}
 async function archiveQuiz(uid,session){await atomic(['meta'],tx=>{const store=tx.objectStore('meta');store.put({key:uid+':archived-quiz:'+session.id,owner:uid,quiz:structuredClone(session)});store.delete(uid+':active-quiz');});}
