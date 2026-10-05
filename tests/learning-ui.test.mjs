@@ -25,7 +25,8 @@ Object.defineProperty(globalThis, "navigator", {
 });
 const uid = randomUUID();
 let db,
-  dropReviewResponse = false;
+  dropReviewResponse = false,
+  dropQuizResponse = false;
 const request = async (name, args) => {
   try {
     const entries = Object.entries(args || {});
@@ -49,6 +50,7 @@ const request = async (name, args) => {
       dropReviewResponse = false;
       return { error: new TypeError("Injected lost response") };
     }
+    if(name==='quiz_start'&&dropQuizResponse){dropQuizResponse=false;return {error:new TypeError('Injected lost quiz response')};}
     return { data, error: null };
   } catch (e) {
     return { data: null, error: e };
@@ -228,6 +230,11 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     const archived=(await readStore('meta',uid+':archived-quiz:'+original.id)).quiz;
     assert.equal(archived.answers.length,1);
     assert.equal((await db.query('select count(*)::int n from public.quiz_answers')).rows[0].n,0);
+    document.querySelector('input[type=number]').value='1';
+    dropQuizResponse=true;button('Start Quiz').click();
+    assert(button('Start Quiz').disabled,'block duplicate requests while preparing');
+    await wait(()=>document.body.textContent.includes('Unable to start the quiz.'));
+    assert(!button('Start Quiz').disabled,'failed request can be retried');
     document.querySelector('input[type=number]').value='2';
     button('Start Quiz').click();
     await wait(()=>document.querySelector('.mcq-options'));

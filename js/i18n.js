@@ -337,3 +337,4 @@ Object.assign(bn,{'New word':'নতুন শব্দ'});
 
 Object.assign(bn,{'Next review in':'পরের রিভিউ বাকি','Time until next review':'পরের রিভিউ পর্যন্ত সময়ের অগ্রগতি','Ready to review now':'এখন রিভিশন করার সময়','{count}% of the review interval has passed':'রিভিউয়ের বিরতির {count}% সময় পার হয়েছে','Check connection to refresh review time.':'রিভিউ সময় আপডেট করতে সংযোগ পরীক্ষা করুন।','App release: 2026-10-04 · Review countdown':'অ্যাপ সংস্করণ: ৪ অক্টোবর ২০২৬ · রিভিউ কাউন্টডাউন'});
 Object.assign(bn,{'{count} days':'{count} দিন'});
+Object.assign(bn,{'Preparing your quiz…':'কুইজ প্রস্তুত হচ্ছে…','Quiz preparation took too long. Please try fewer questions and retry.':'কুইজ প্রস্তুত হতে বেশি সময় লেগেছে। প্রশ্নসংখ্যা কমিয়ে আবার চেষ্টা করুন।','Unable to start the quiz. Please retry.':'কুইজ শুরু করা যায়নি। আবার চেষ্টা করুন।','App release: 2026-10-05 · Faster quiz':'অ্যাপ সংস্করণ: ৫ অক্টোবর ২০২৬ · দ্রুত কুইজ'});

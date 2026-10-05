@@ -18,5 +18,13 @@ test('MCQ eligibility, distinct authored options, stable retry and server scorin
  for(const q of quiz.questions){assert.equal(q.type,'multiple_choice');assert(q.choices.length>=2&&q.choices.length<=4);assert.equal(new Set(q.choices).size,4);assert(q.choices.includes(q.answers[0]));assert(q.direction);if(q.answer_lang==='en')assert(q.choices.every(c=>['book','pen','door','house'].includes(c)));if(q.answer_lang==='bn')assert(q.choices.every(c=>['বই','কলম','দরজা','বাড়ি'].includes(c)));if(q.answer_lang==='ar')assert(q.choices.every(c=>/[ء-ي]/.test(c)));}
  const answers=quiz.questions.map((q,i)=>({id:q.id,answer:i===0?q.choices.find(c=>c!==q.answers[0]):q.answers[0],response_ms:1000}));
  const score=(await db.query('select public.quiz_finish($1,$2,$3)result',[randomUUID(),quiz.id,JSON.stringify(answers)])).rows[0].result.score;assert.equal(score,quiz.questions.length-1);
+ // Real collections must finish within the API's eight-second deadline.
+ // The previous per-word bank already took >3s for this fixture locally.
+ await db.exec('reset role');
+ await db.query(`insert into public.words(user_id,arabic_word,normalized_arabic,english_meaning,bangla_meaning,word_type) select $1,'كتاب '||i,'كتاب '||i,'book '||i,'বই '||i,'noun' from generate_series(1,63)i`,[owner]);
+ await db.exec("set role authenticated;set statement_timeout='2s'");
+ const large=await start();assert.equal(large.questions.length,20);
+ assert.deepEqual(new Set(large.questions.map(q=>q.direction)),new Set(['bangla_arabic','arabic_bangla','arabic_english','english_arabic']));
+ assert(large.questions.every(q=>q.choices.length===4&&q.choices.includes(q.answers[0])));
  }finally{await db.close();}
 });

@@ -37,7 +37,8 @@ let quiz = null,
   owner = null,
   render = () => {},
   busy = false,
-  startOp = null;
+  startOp = null,
+  startSignature = null;
 subscribeAccount((account) => {
   if (owner && owner !== account.user?.id) {
     quiz = null;
@@ -123,19 +124,19 @@ export function quizPage() {
           )
             return;
           busy = true;
+          card.querySelectorAll('.feedback').forEach(n=>n.remove());
           const startButton=card.querySelector('button');
           startButton.disabled=true;
           const pending=node('p','Preparing your quiz…','feedback');pending.setAttribute('role','status');card.append(pending);
+          const options={p_count:Number(count.input.value),p_types:selected,p_weak:Number(weak.input.value),p_new:newWords.input.checked,p_mastered:mastered.input.checked};
+          const signature=JSON.stringify(options);
+          if(startSignature!==signature){startOp=null;startSignature=signature;}
           startOp ??= crypto.randomUUID();
           try {
             const result = await vocabularyRequest((c) =>
               c.rpc("quiz_start", {
                 p_operation: startOp,
-                p_count: Number(count.input.value),
-                p_types: selected,
-                p_weak: Number(weak.input.value),
-                p_new: newWords.input.checked,
-                p_mastered: mastered.input.checked,
+                ...options,
               }),
             );
             if (owner !== getAccount().user?.id) return;
