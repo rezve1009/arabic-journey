@@ -123,6 +123,9 @@ export function quizPage() {
           )
             return;
           busy = true;
+          const startButton=card.querySelector('button');
+          startButton.disabled=true;
+          const pending=node('p','Preparing your quiz…','feedback');pending.setAttribute('role','status');card.append(pending);
           startOp ??= crypto.randomUUID();
           try {
             const result = await vocabularyRequest((c) =>
@@ -157,9 +160,12 @@ export function quizPage() {
               render();
             }
           } catch (e) {
-            message(card, e);
+            const code=String(e?.code||'').replace(/[^A-Za-z0-9_]/g,'').slice(0,20);
+            const failure=node('p',e?.code==='57014'?'Quiz preparation took too long. Please try fewer questions and retry.':'Unable to start the quiz. Please retry.','feedback is-error');
+            failure.setAttribute('role','alert');if(code)failure.append(content('span',' ('+code+')'));card.append(failure);
           } finally {
             busy = false;
+            pending.remove();startButton.disabled=false;
           }
         },
         true,
