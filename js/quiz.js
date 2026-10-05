@@ -77,7 +77,7 @@ export function quizPage() {
   }
   const card = node("section", "", "card study-card");
   const coverage=node('section','','card quiz-coverage');page.append(coverage);
-  if(!quiz||quiz.saved)queueMicrotask(async()=>{try{const status=await vocabularyRequest(c=>c.rpc('quiz_coverage_status'));if(page.isConnected&&account.user.id===getAccount().user?.id)showCoverage(coverage,status);}catch{if(page.isConnected)coverage.append(node('p','Coverage could not be loaded.'));}});
+  if(!quiz||quiz.saved||!quiz.settings_snapshot?.coverage_round)queueMicrotask(async()=>{try{const status=await vocabularyRequest(c=>c.rpc('quiz_coverage_status'));if(page.isConnected&&account.user.id===getAccount().user?.id)showCoverage(coverage,status);}catch{if(page.isConnected)coverage.append(node('p','Coverage could not be loaded.'));}});
   else showCoverage(coverage,{round:quiz.settings_snapshot?.coverage_round||1,total:quiz.settings_snapshot?.coverage_total||0,covered:quiz.settings_snapshot?.coverage_done||0});
   page.append(card);
   if (!quiz) {
