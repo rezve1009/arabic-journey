@@ -1,5 +1,6 @@
 import { t, translate } from "./i18n.js";
 import { getAccount } from "./supabase.js";
+import { isRevisionConflict } from './conflicts.js';
 export function node(tag, text = "", className = "") {
   const n = document.createElement(tag);
   n.className = className;
@@ -52,7 +53,7 @@ export function ready(page) {
 export function message(parent, error) {
   const n = node(
     "p",
-    error?.code === "40001"
+    isRevisionConflict(error)
       ? "This item changed on another device. Reload to continue."
       : "Unable to finish. Your work is kept; please retry.",
     "feedback is-error",

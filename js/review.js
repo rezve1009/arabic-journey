@@ -1,4 +1,5 @@
 import {mountDueCountdown}from './due-countdown.js';
+import {isRevisionConflict}from './conflicts.js';
 import {upcomingList}from './upcoming-list.js';
 import {examplesDetails} from './examples.js';
 import {reviewDate} from './srs-details.js';
@@ -342,7 +343,7 @@ export function reviewPage() {
   }
   if (session.error) {
     message(body, session.error);
-    if (session.error.code === "40001")
+    if (isRevisionConflict(session.error))
       body.append(
         action("Reload review state", async () => {
           item.state = (await getReviewInfo(item.id)).state;

@@ -2,6 +2,7 @@ import { getAccount, vocabularyClient, subscribeAccount } from "./supabase.js";
 import { getCache, putCache, allStore, atomic, readStore } from "./storage.js";
 import { normalizeArabic } from "./arabic-utils.js";
 import { fixedTransition } from "./srs.js";
+import {isRevisionConflict} from './conflicts.js';
 const tables = [
   "words",
   "tags",
@@ -97,7 +98,7 @@ async function syncWork() {
       const result = await c.rpc(op.rpc, op.args);
       if (result.error) {
         op.error = result.error.message;
-        op.conflict = ["40001", "22023", "23514", "23505"].includes(
+        op.conflict = isRevisionConflict(result.error) || ["22023", "23514", "23505"].includes(
           result.error.code,
         );
         op.attempts = (op.attempts || 0) + 1;

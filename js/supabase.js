@@ -2,6 +2,7 @@ import {cacheAccount,cachedAccount,clearOwner,allStore,activeAccount,rememberAct
 import {authRetry,retryAfterSeconds} from './auth-retry.js';
 import { supabaseConfig } from './config.js';
 import { getLanguage, setLanguage } from './i18n.js';
+import {isRevisionConflict} from './conflicts.js';
 
 const configKey = 'arabic-journey.supabase-public-config';
 let client;
@@ -271,7 +272,7 @@ export function errorMessage(error) {
   if (code === 'storage_error') return 'Unable to store configuration on this device. Check browser storage permissions.';
   if (code === 'unconfigured') return 'Supabase is not configured yet.';
   if (code === 'offline' || !navigator.onLine) return 'You are offline. Reconnect and try again.';
-  if (code === '40001') return 'Account data changed on another device. Reload before saving.';
+  if (isRevisionConflict(error)) return 'Account data changed on another device. Reload before saving.';
   if (code === '23514' || code === '22023') return 'Check the name, language, and timezone, then try again.';
   if (code === '42501') return 'This account is not allowed to make that change.';
   if (['PGRST116','PGRST205','42P01','42883','PGRST202'].includes(code)) return 'Account data is unavailable. Apply the Phase 2 database migration, then reload.';

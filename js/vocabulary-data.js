@@ -1,5 +1,6 @@
 import {cloudWrite,offlineList,cachedWord} from './sync.js';
 import {getCache} from './storage.js';
+import {isRevisionConflict} from './conflicts.js';
 import { vocabularyClient, getAccount, errorMessage } from './supabase.js';
 
 export async function vocabularyRequest(work) {
@@ -47,7 +48,7 @@ export function writeVocabulary({ operation = crypto.randomUUID(), action, id, r
 export function vocabularyError(error) {
   if(error?.message==='invalid_root')return 'Enter exactly 3 or 4 Arabic root letters.';
   if(error?.message==='invalid_arabic_list')return 'Use up to 20 items, with at most 200 characters each.';
-  if (error?.code === '40001') return 'This item changed on another device. Your draft is kept. Open the latest item before saving again.';
+  if (isRevisionConflict(error)) return 'This item changed on another device. Your draft is kept. Open the latest item before saving again.';
   if (error?.code === '23505') return 'That tag or deck name already exists.';
   if (['23514','23502','22023','22P02'].includes(error?.code)) return 'Check the required fields and selected tags, then try again.';
   if (['PGRST202','42883'].includes(error?.code)) return 'Vocabulary is unavailable. Apply the Phase 4 database migration.';
