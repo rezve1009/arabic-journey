@@ -343,6 +343,13 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     await wait(()=>button('Show Answer'));assert(document.body.textContent.includes('Upcoming review session'));button('Show Answer').click();button('Good').click();
     await wait(()=>button('Next upcoming batch'));assert(document.body.textContent.includes('Session complete'));unmountReview();
 
+    // A mounted schedule draft survives unrelated server preference revisions.
+    const {scheduleForm}=await import('../js/srs-settings.js');const {saveFixedSchedule}=await import('../js/supabase.js');let savingSchedule;
+    const beforeDates=(await db.query('select word_id,next_review_at from public.word_review_state order by word_id')).rows;
+    const form=scheduleForm({save:saveFixedSchedule,run:work=>{savingSchedule=work();},reload:loadAccount});document.body.replaceChildren(form);
+    const repeat=[...form.querySelectorAll('label')].find(label=>label.textContent==='Long-term repeat days').querySelector('input');repeat.value='90';repeat.dispatchEvent(new Event('input'));
+    await db.exec('reset role');await db.query("update public.user_settings set arabic_font_size=48 where user_id=$1",[uid]);await db.exec('set role authenticated');
+    form.dispatchEvent(new Event('submit',{cancelable:true}));await savingSchedule;assert.equal(getAccount().settings.revision_schedule.repeat_days,90);assert.equal(getAccount().settings.arabic_font_size,48);assert.deepEqual((await db.query('select word_id,next_review_at from public.word_review_state order by word_id')).rows,beforeDates);
     // Owner administration and the join-request login state are real RPC flows.
     const {adminPage}=await import('../js/admin.js');const {loginPage,setLoginRenderer}=await import('../js/login.js');
     const pendingA=randomUUID(),pendingB=randomUUID(),pendingC=randomUUID();

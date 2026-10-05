@@ -1,13 +1,14 @@
+import{scheduleBaseline}from './settings-conflict.js';
 import {getAccount,subscribeAccount} from './supabase.js';
 import {t} from './i18n.js';
 import {defaultSchedule,defaultRatings,validateSchedule} from './srs.js';
 import {showModal} from './ui.js';
-let owner,draft;
+let owner,draft,baseline;
 subscribeAccount(account=>{if(owner&&owner!==account.user?.id){owner=undefined;draft=null;}});
 export function acknowledgeScheduleRevision(){if(draft&&owner===getAccount().user?.id)draft.revision=getAccount().settings.revision;}
 export function scheduleForm({save,run,reload}){
  const account=getAccount();if(owner!==account.user.id){owner=account.user.id;draft=null;}
- if(!draft)draft={...structuredClone(account.settings.revision_schedule),ratings:structuredClone(account.settings.rating_behavior),revision:account.settings.revision};
+ if(!draft){baseline=scheduleBaseline(account.settings);draft={...structuredClone(account.settings.revision_schedule),ratings:structuredClone(account.settings.rating_behavior),revision:account.settings.revision};}
  const form=document.createElement('form');form.className='settings-form srs-settings';
  const node=(tag,text)=>{const element=document.createElement(tag);if(text)element.textContent=t(text);return element;};
  const button=(text,action)=>{const b=node('button',text);b.type='button';b.className='button button-secondary';b.addEventListener('click',action);return b;};
@@ -37,6 +38,6 @@ export function scheduleForm({save,run,reload}){
   }));
  };
  form.addEventListener('submit',event=>{event.preventDefault();if(!form.reportValidity())return;
-  const values=structuredClone(draft);run(async()=>{validateSchedule(values,values.ratings);await save(values,values.revision);acknowledgeScheduleRevision();draft=null;},'Fixed schedule saved. Existing due dates were kept.');
+  const values=structuredClone(draft);run(async()=>{validateSchedule(values,values.ratings);await save(values,values.revision,structuredClone(baseline));acknowledgeScheduleRevision();draft=null;},'Fixed schedule saved. Existing due dates were kept.');
  });render();return form;
 }

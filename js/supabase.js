@@ -1,3 +1,4 @@
+import{scheduleBaseline,saveScheduleWithConflict}from './settings-conflict.js';
 import {cacheAccount,cachedAccount,clearOwner,allStore,activeAccount,rememberActive} from './storage.js';
 import {authRetry,retryAfterSeconds} from './auth-retry.js';
 import { supabaseConfig } from './config.js';
@@ -233,11 +234,14 @@ export function saveLanguagePreference(language = getLanguage()) {
   });
   return languageSave;
 }
-export async function saveFixedSchedule(values,revision) {
+export async function saveFixedSchedule(values,revision,baseline=scheduleBaseline(state.settings)) {
   const activeClient=vocabularyClient(),userId=state.user.id;
-  const {data,error}=await activeClient.rpc('save_fixed_schedule',{p_revision:revision,p_intervals:values.intervals,p_repeat_days:values.repeat_days,p_ratings:values.ratings});
-  if(error){if(['23514','22023'].includes(error.code))throw new Error('invalid_srs');if(['PGRST202','42883'].includes(error.code))throw new Error('missing_srs');throw error;}
-  if(client!==activeClient||state.user?.id!==userId)throw new Error('session_expired');publish({settings:data});return data;
+  const isCurrent=()=>client===activeClient&&state.user?.id===userId;
+  const data=await saveScheduleWithConflict({settings:state.settings,baseline,revision,isCurrent,
+    read:async()=>{const result=await activeClient.from('user_settings').select('*').eq('user_id',userId).single();if(result.error)throw result.error;return result.data;},
+    save:async expected=>{if(!isCurrent())throw new Error('session_expired');const {data,error}=await activeClient.rpc('save_fixed_schedule',{p_revision:expected,p_intervals:values.intervals,p_repeat_days:values.repeat_days,p_ratings:values.ratings});if(error){if(['23514','22023'].includes(error.code))throw new Error('invalid_srs');if(['PGRST202','42883'].includes(error.code))throw new Error('missing_srs');throw error;}return data;}
+  });
+  if(!isCurrent())throw new Error('session_expired');publish({settings:data});return data;
 }
 export async function saveArabicDisplay(values,revision) {
   const activeClient=vocabularyClient();const userId=state.user.id;

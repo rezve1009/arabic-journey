@@ -109,7 +109,7 @@ export function settingsPage() {
   else {const help=document.createElement('p');help.className='settings-help';help.textContent='Sign in to save Arabic display preferences.';arabicSection.append(help);}
   page.querySelector('.settings-grid').append(arabicSection);
   const scheduleSection=document.createElement('section');scheduleSection.className='card settings-card';scheduleSection.id='schedule-section';scheduleSection.append(Object.assign(document.createElement('h2'),{textContent:t('Fixed review schedule')}));
-  if(account.status==='ready')scheduleSection.append(scheduleForm({save:async(values,revision)=>{await saveFixedSchedule(values,revision);acknowledgeLanguagePreference();},run,reload:loadAccount}));
+  if(account.status==='ready')scheduleSection.append(scheduleForm({save:async(values,revision,baseline)=>{await saveFixedSchedule(values,revision,baseline);acknowledgeLanguagePreference();},run,reload:loadAccount}));
   else scheduleSection.append(Object.assign(document.createElement('p'),{textContent:t('Sign in to edit your fixed schedule.')}));
   page.querySelector('.settings-grid').append(scheduleSection);
   for(const term of page.querySelectorAll('#learning-section dt'))if(term.textContent==='Revision'){term.nextElementSibling.remove();term.remove();}
