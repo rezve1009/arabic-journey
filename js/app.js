@@ -15,6 +15,7 @@ import { settingsPage, setSettingsRenderer, updateDraftLanguage, acknowledgeLang
 import { vocabularyPage, setVocabularyRenderer, unmountVocabulary } from './vocabulary.js';
 
 import { loginPage, setLoginRenderer } from './login.js';
+import {adminPage}from './admin.js';
 
 const desktopNav = document.getElementById('desktop-nav');
 for (const [group, label] of [['learn', ''], ['collection', 'YOUR COLLECTION'], ['tools', 'TOOLS & INSIGHTS']]) {
@@ -39,7 +40,7 @@ more.addEventListener('click', () => {
   const links = document.createElement('nav');
   links.className = 'more-menu';
   links.setAttribute('aria-label', 'More pages');
-  for (const route of routes.filter(item => !['dashboard', 'vocabulary', 'add-word', 'review'].includes(item.id))) links.append(navLink(route));
+  for (const route of routes.filter(item => !['dashboard', 'vocabulary', 'add-word', 'review'].includes(item.id)&& (item.id!=='admin'||getAccount().access?.role==='admin'))) links.append(navLink(route));
   links.addEventListener('click', event => {
     if (event.target.closest('a')) document.getElementById('app-dialog').close();
   });
@@ -93,11 +94,14 @@ updateConnectivity();
 
 let initialNavigation = true;
 function renderRoute(route, navigate = false) {
+  if(['pending','declined'].includes(getAccount().status)&&route.id!=='login'){
+    route=routes.find(r=>r.id==='login');history.replaceState(null,'',location.pathname+location.search+'#/login');
+  }
   document.body.classList.toggle('login-layout',route.id==='login');
   unmountVocabulary();
   unmountReview();
   if (document.getElementById('app-dialog').open) document.getElementById('app-dialog').close();
-  const page = route.id === 'login' ? loginPage() : route.id==='import-export'?backupPage():['weak-words','mastered'].includes(route.id) ? progressPage(route) : ['statistics','history'].includes(route.id) ? statisticsPage(route) : route.id === 'quiz' ? quizPage() : route.id === 'review' ? reviewPage() : route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
+  const page = route.id === 'login' ? loginPage() : route.id==='admin'?adminPage():route.id==='import-export'?backupPage():['weak-words','mastered'].includes(route.id) ? progressPage(route) : ['statistics','history'].includes(route.id) ? statisticsPage(route) : route.id === 'quiz' ? quizPage() : route.id === 'review' ? reviewPage() : route.id === 'dashboard' ? dashboard() : route.id === 'settings' ? settingsPage() : ['vocabulary','add-word','favorites','tags'].includes(route.id) ? vocabularyPage(route) : futurePage(route);
   translate(page);
   document.getElementById('main').replaceChildren(page);
   document.getElementById('breadcrumb-title').textContent = t(route.title);
@@ -161,7 +165,7 @@ window.addEventListener('languagechange',()=>{
 });
 subscribeAccount(()=>{
   updateConnectivity();
-  if (['weak-words','mastered','statistics','history','quiz','review','login','settings','vocabulary','add-word','favorites','tags','dashboard'].includes(currentRoute()?.id)) renderRoute(currentRoute());
+  if (['weak-words','mastered','statistics','history','quiz','review','login','settings','vocabulary','add-word','favorites','tags','dashboard','admin'].includes(currentRoute()?.id)) renderRoute(currentRoute());
 });
 initializeSync();
 initializePwa().catch(()=>{});

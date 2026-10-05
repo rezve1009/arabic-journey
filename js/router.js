@@ -1,6 +1,7 @@
 export const routes = [
   { id: 'dashboard', title: 'Dashboard', icon: 'dashboard', phase: 1, group: 'learn' },
   { id:'login', title:'Sign in', icon:'settings', phase:2, group:'auth' },
+  { id:'admin', title:'Access requests', icon:'settings', group:'admin' },
   { id: 'vocabulary', title: 'Vocabulary', icon: 'book', phase: 3, group: 'learn', description: 'Your Arabic words, meanings, and notes will live here.' },
   { id: 'add-word', title: 'Add Word', icon: 'plus', phase: 3, group: 'learn', description: 'Quick Add and full word entry will help you capture what you learn.' },
   { id: 'review', title: 'Review', icon: 'review', phase: 6, group: 'learn', description: 'Review due vocabulary with flashcards and a fixed revision schedule.' },

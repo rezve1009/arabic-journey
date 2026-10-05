@@ -10,7 +10,7 @@ let subscription;
 let generation = 0;
 let connectionEpoch = 0;
 let languageSave = Promise.resolve();
-let state = { status: 'unconfigured', user: null, profile: null, settings: null, error: null };
+let state = { status: 'unconfigured', user: null, profile: null, settings: null, access: null, error: null };
 const listeners = new Set();
 export const getAccount = () => state;
 export function subscribeAccount(listener) { listeners.add(listener); return () => listeners.delete(listener); }
@@ -72,7 +72,7 @@ export async function initializeSupabase() {
   subscription?.unsubscribe();
   client?.auth.stopAutoRefresh();
   client = null;
-  publish({ status: 'unconfigured', user: null, profile: null, settings: null, error: null });
+  publish({ status: 'unconfigured', user: null, profile: null, settings: null, access: null, error: null });
   const config = getPublicConfig();
   if (!config.url && !config.publicKey) return;
   try {
@@ -93,14 +93,14 @@ export async function initializeSupabase() {
         if(!navigator.onLine&&state.status==='offline'&&!session)return;
         if (!session) {
           ++generation;
-          publish({ status: 'signed-out', user: null, profile: null, settings: null, error: null });
+          publish({ status: 'signed-out', user: null, profile: null, settings: null, access: null, error: null });
         } else if (state.user?.id !== session.user.id || state.status !== 'ready') {
           loadAccount(session.user);
         }
       }, 0);
     });
     subscription = data.subscription;
-    if(!navigator.onLine){const cached=await activeAccount();if(cached){if(activeClient!==client)return;publish({status:'offline',user:cached.user,profile:cached.profile,settings:cached.settings,error:null});setLanguage(cached.settings.ui_language,{notify:false});window.dispatchEvent(new Event('languagechange'));return;}}
+    if(!navigator.onLine){const cached=await activeAccount();if(cached){if(activeClient!==client)return;publish({status:cached.profile._access?.status==='approved'?'offline':cached.profile._access?.status||'pending',user:cached.user,profile:cached.profile,settings:cached.settings,access:cached.profile._access||null,error:null});setLanguage(cached.settings.ui_language,{notify:false});window.dispatchEvent(new Event('languagechange'));return;}}
     const initialized = await activeClient.auth.initialize();
     if (initialized.error) { initializationFailed = true; throw initialized.error; }
     const result = await activeClient.auth.getSession();
@@ -137,19 +137,21 @@ export async function loadAccount(user = state.user) {
   if (!client || !user) return;
   const token = ++generation;
   const activeClient = client;
-  publish({ status: 'loading', user, profile: null, settings: null, error: null });
+  publish({ status: 'loading', user, profile: null, settings: null, access: null, error: null });
   try {
-    if(!navigator.onLine){const cached=await cachedAccount(user.id);if(!cached)throw new Error('offline');if(token!==generation)return;publish({status:'offline',user,profile:cached.profile,settings:cached.settings,error:null});return;}
-    const [profile, settings] = await Promise.all([
+    if(!navigator.onLine){const cached=await cachedAccount(user.id);if(!cached)throw new Error('offline');if(token!==generation)return;publish({status:cached.profile._access?.status==='approved'?'offline':cached.profile._access?.status||'pending',user,profile:cached.profile,settings:cached.settings,access:cached.profile._access||null,error:null});return;}
+    const [profile, settings, membership] = await Promise.all([
       activeClient.from('profiles').select('*').eq('user_id',user.id).single(),
       activeClient.from('user_settings').select('*').eq('user_id',user.id).single(),
+      activeClient.rpc('access_status'),
     ]);
-    if (profile.error || settings.error) throw profile.error || settings.error;
+    if (profile.error || settings.error || membership.error) throw profile.error || settings.error || membership.error;
     if (token !== generation || activeClient !== client) return;
     setLanguage(settings.data.ui_language, { notify: false });
-    await cacheAccount(user,profile.data,settings.data).catch(()=>{});
-    await rememberActive(user,profile.data,settings.data).catch(()=>{});
-    publish({ status: 'ready', user, profile: profile.data, settings: settings.data, error: null });
+    const access=membership.data,cachedProfile={...profile.data,_access:access};
+    await cacheAccount(user,cachedProfile,settings.data).catch(()=>{});
+    await rememberActive(user,cachedProfile,settings.data).catch(()=>{});
+    publish({ status: access.status==='approved'?'ready':access.status, user, profile: cachedProfile, settings: settings.data, access, error: null });
     window.dispatchEvent(new Event('languagechange'));
   } catch (error) {
     if (token === generation) publish({ status: 'error', error: errorMessage(error) });
@@ -160,6 +162,10 @@ function requireClient() {
   if (!client) throw new Error('unconfigured');
   if (!navigator.onLine) throw new Error('offline');
   return client;
+}
+export async function accessRequest(rpc,args={}){
+  if(!['access_requests','access_decide'].includes(rpc))throw new Error('invalid_request');
+  const {data,error}=await requireClient().rpc(rpc,args);if(error)throw error;return data;
 }
 export function vocabularyClient() {
   if (!['ready','offline'].includes(state.status) || !state.user) throw new Error('session_expired');
@@ -195,7 +201,7 @@ export async function signOut() {
   if (error) throw error;
   if(uid)await clearOwner(uid);
   ++generation;
-  publish({ status: 'signed-out', user: null, profile: null, settings: null, error: null });
+  publish({ status: 'signed-out', user: null, profile: null, settings: null, access: null, error: null });
 }
 export async function savePreferences(values, expected) {
   const activeClient = requireClient();

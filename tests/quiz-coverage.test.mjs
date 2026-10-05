@@ -1,10 +1,11 @@
+import {approveFixtureUsers}from './approved-fixture.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';
 import{readFile,readdir}from'node:fs/promises';import{randomUUID}from'node:crypto';import{PGlite}from'@electric-sql/pglite';
 test('Quiz rounds mix unique old/new words, complete coverage, restart, retry and isolate owners',async()=>{
  const db=new PGlite();try{
  await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);create function auth.uid()returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid()to anon,authenticated;`);
  for(const f of(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
- const owner=randomUUID(),other=randomUUID();await db.query('insert into auth.users(id)values($1),($2)',[owner,other]);
+ const owner=randomUUID(),other=randomUUID();await approveFixtureUsers(db);await db.query('insert into auth.users(id)values($1),($2)',[owner,other]);
  await db.query(`insert into public.words(user_id,arabic_word,normalized_arabic,english_meaning,bangla_meaning,word_type)select $1,'كتاب '||i,'كتاب '||i,'book '||i,'বই '||i,'noun' from generate_series(1,6)i`,[owner]);
  await db.exec('set role authenticated');await db.query(`select set_config('request.jwt.claim.sub',$1,false)`,[owner]);
  const status=async()=>(await db.query('select public.quiz_coverage_status()s')).rows[0].s;

@@ -23,7 +23,7 @@ test('password auth delegates to Supabase, loads the owner account, and requires
  const auth={stopAutoRefresh(){},onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};},initialize:async()=>({}),getSession:async()=>({data:{session:null}}),
  signInWithPassword:async values=>{calls.push(values);return values.password==='wrong'?{error:{code:'invalid_credentials'}}:{data:{user}};},
  signUp:async values=>{calls.push(values);return{data:{user,session:null}};},updateUser:async values=>{calls.push(values);return{};}};
- globalThis.window={supabase:{createClient:()=>({auth,from:table=>({select(){return this;},eq(){return this;},single:async()=>({data:table==='profiles'?{display_name:'Owner'}:{ui_language:'en'}})})})},dispatchEvent(){}};
+ globalThis.window={supabase:{createClient:()=>({auth,rpc:async()=>({data:{status:'approved',role:'member'}}),from:table=>({select(){return this;},eq(){return this;},single:async()=>({data:table==='profiles'?{display_name:'Owner'}:{ui_language:'en'}})})})},dispatchEvent(){}};
  globalThis.document={documentElement:{}};
  await initializeSupabase();await assert.rejects(signInPassword(user.email,'wrong'),e=>e.code==='invalid_credentials');
  await signInPassword(user.email,'correct-test-only');assert.equal(getAccount().user.id,user.id);

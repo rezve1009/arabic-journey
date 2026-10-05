@@ -1,3 +1,4 @@
+import {approveFixtureUsers}from './approved-fixture.mjs';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
@@ -16,7 +17,7 @@ test("Learning migrations: eligible authored quiz, server scoring, retries and o
     const alice = randomUUID(),
       bob = randomUUID(),
       word = randomUUID();
-    await db.query("insert into auth.users(id)values($1),($2)", [alice, bob]);
+    await approveFixtureUsers(db);await db.query("insert into auth.users(id)values($1),($2)", [alice, bob]);
     await db.exec("set role authenticated");
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
       alice,

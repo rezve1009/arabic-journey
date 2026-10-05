@@ -1,3 +1,4 @@
+import {approveFixtureUsers}from './approved-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
@@ -7,7 +8,7 @@ test('MCQ eligibility, distinct authored options, stable retry and server scorin
  const db=new PGlite();try{
  await db.exec("create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);create function auth.uid()returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid()to anon,authenticated;");
  for(const f of(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
- const owner=randomUUID();await db.query('insert into auth.users(id)values($1)',[owner]);await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+ const owner=randomUUID();await approveFixtureUsers(db);await db.query('insert into auth.users(id)values($1)',[owner]);await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
  const add=async(arabic,meaning)=>db.query("select public.vocabulary_write($1,'save',$2,null,$3)",[randomUUID(),randomUUID(),JSON.stringify({arabic_word:arabic,english_meaning:meaning,bangla_meaning:({book:'বই',pen:'কলম',door:'দরজা',house:'বাড়ি'})[meaning],word_type:'noun'})]);
  const start=async(op=randomUUID())=>(await db.query("select public.quiz_start($1,20,array['multiple_choice']) result",[op])).rows[0].result;
  await add('كِتَابٌ','book');assert.deepEqual(await start(),{empty:true});

@@ -1,4 +1,4 @@
-import {getAccount,getPublicConfig,sendCode,verifyCode,signInPassword,signUpPassword,setAccountPassword,errorMessage} from './supabase.js';
+import {getAccount,getPublicConfig,sendCode,verifyCode,signInPassword,signUpPassword,setAccountPassword,errorMessage,loadAccount,signOut} from './supabase.js';
 import {authRetry} from './auth-retry.js';
 import {t,translate} from './i18n.js';
 let mode='password',email='',sent=false,busy=false,message='',failed=false,retryTimer;
@@ -26,7 +26,12 @@ export function loginPage(){
  const account=getAccount(),page=document.createElement('div');page.className='login-page';
  page.innerHTML=`<section class="login-story"><a class="login-brand" href="#/dashboard"><img src="./icons/app.svg" width="42" height="42" alt=""><span>Arabic Journey</span></a><div class="login-story-content"><p class="eyebrow">ONE WORD AT A TIME</p><div class="login-arabic" lang="ar" dir="rtl">كُلُّ يَوْمٍ، خُطْوَةٌ</div><h2>A little learning.<br>A lasting journey.</h2><p>Your words, your progress, your own learning space.</p><div class="login-chips"><span>Vocabulary</span><span>Revision</span><span>Every day</span></div></div><p class="login-story-foot">Your vocabulary stays private in your account.</p></section><section class="login-panel"><div class="login-form-wrap"><a href="#/dashboard" class="login-back">← Back to learning space</a><p class="eyebrow">WELCOME TO ARABIC JOURNEY</p><h1>Welcome back</h1><p class="login-subtitle">Sign in and continue your learning.</p><div id="login-content"></div></div></section>`;
  const content=page.querySelector('#login-content');
- if(account.user){
+ if(account.user&&['pending','declined'].includes(account.status)){
+  const pending=account.status==='pending';page.querySelector('h1').textContent=t(pending?'Awaiting approval':'Request declined');
+  page.querySelector('.login-subtitle').textContent=t(pending?'Your request has been sent to the administrator. You can start learning after approval.':'The administrator has declined your request. Contact the site owner for help.');
+  const identity=document.createElement('p');identity.textContent=account.user.email;identity.dataset.noTranslate='';content.append(identity);
+  const notice=document.createElement('div');notice.className='access-wait-card';notice.textContent=t(pending?'You do not need to submit another request. Check your approval status here.':'Your account cannot access the learning pages.');content.append(notice,button('Check approval status',()=>run(()=>loadAccount()),'button-primary'),button('Sign out',()=>run(()=>signOut())));
+ }else if(account.user){
   page.querySelector('h1').textContent=t('You are signed in');
   const identity=document.createElement('p');identity.textContent=account.user.email;identity.dataset.noTranslate='';content.append(identity);
   const link=document.createElement('a');link.href=account.status==='ready'?'#/dashboard':'#/settings';link.className='button button-primary';link.textContent=t(account.status==='ready'?'Continue learning':'Reload account');content.append(link);
@@ -35,8 +40,9 @@ export function loginPage(){
   form.addEventListener('submit',event=>{event.preventDefault();confirm.input.setCustomValidity(pass.input.value===confirm.input.value?'':t('Passwords do not match.'));if(!form.reportValidity())return;const password=pass.input.value;pass.input.value='';confirm.input.value='';run(()=>setAccountPassword(password),'Password saved. Next time, sign in with your email and password.');});confirm.input.addEventListener('input',()=>confirm.input.setCustomValidity(''));pass.input.addEventListener('input',()=>confirm.input.setCustomValidity(''));details.append(form);content.append(details);
  }else{
   const tabs=document.createElement('div');tabs.className='login-tabs';tabs.setAttribute('aria-label',t('Sign-in method'));
-  for(const [id,label]of [['password','Password'],['email','Email link'],['signup','Create account']]){const b=button(label,()=>{mode=id;message='';render();});b.setAttribute('aria-pressed',String(mode===id));tabs.append(b);}content.append(tabs);
-  if(mode==='signup'){page.querySelector('h1').textContent=t('Start your journey');page.querySelector('.login-subtitle').textContent=t('Create an account with your email and a password.');}
+  for(const [id,label]of [['password','Password'],['email','Email link'],['signup','Request to join']]){const b=button(label,()=>{mode=id;message='';render();});b.setAttribute('aria-pressed',String(mode===id));tabs.append(b);}content.append(tabs);
+  const approvalHelp=document.createElement('p');approvalHelp.className='settings-help';approvalHelp.textContent=t('New accounts require administrator approval.');content.append(approvalHelp);
+  if(mode==='signup'){page.querySelector('h1').textContent=t('Request to join');page.querySelector('.login-subtitle').textContent=t('Create your account and confirm your email. The administrator must approve your access before you can learn.');}
   const form=document.createElement('form');form.className='settings-form login-form';
   const mail=field('Email address','email',{value:email,required:true,autocomplete:'email',placeholder:'you@example.com',readOnly:mode==='email'&&sent});mail.input.addEventListener('input',()=>email=mail.input.value.trim());form.append(mail.label);
   let pass,confirm,code;
@@ -46,9 +52,9 @@ export function loginPage(){
    if(mode==='signup'){confirm=field('Confirm password','password',{required:true,minLength:8,autocomplete:'new-password'});confirm.input.addEventListener('input',()=>confirm.input.setCustomValidity(''));pass.input.addEventListener('input',()=>confirm.input.setCustomValidity(''));form.append(confirm.label);}
   }
   const help=document.createElement('p');help.className='settings-help';help.textContent=t(mode==='signup'?'Use at least 8 characters. Confirm the email we send before signing in.':mode==='password'?'Used an email link before? Choose Email link, sign in, then set a password.':sent?'Check your inbox and spam folder. Open the newest link in this browser, or paste it below.':'No password needed. We will send a sign-in link to your email.');form.append(help);
-  const submit=button(busy?'Working…':mode==='signup'?'Create account':mode==='password'?'Sign in':sent?'Send another link':'Send sign-in link',null,'button-primary');submit.type='submit';form.append(submit);
+  const submit=button(busy?'Working…':mode==='signup'?'Send join request':mode==='password'?'Sign in':sent?'Send another link':'Send sign-in link',null,'button-primary');submit.type='submit';form.append(submit);
   form.addEventListener('submit',event=>{event.preventDefault();if(busy)return;const value=mail.input.value.trim();email=value;
-   if(mode==='signup'){confirm.input.setCustomValidity(pass.input.value===confirm.input.value?'':t('Passwords do not match.'));if(!form.reportValidity())return;const password=pass.input.value;pass.input.value='';confirm.input.value='';run(async()=>{await signUpPassword(value,password);},'Check your email to confirm your account. Open the confirmation link in this browser.');}
+   if(mode==='signup'){confirm.input.setCustomValidity(pass.input.value===confirm.input.value?'':t('Passwords do not match.'));if(!form.reportValidity())return;const password=pass.input.value;pass.input.value='';confirm.input.value='';run(async()=>{await signUpPassword(value,password);},'Check your email to confirm your account. Your join request will be reviewed by the administrator.');}
    else if(mode==='password'){const password=pass.input.value;pass.input.value='';run(()=>signInPassword(value,password));}
    else {run(async()=>{await sendCode(value);sent=true;},'Email sent. Check your inbox and spam folder.');}
   });content.append(form);
@@ -65,7 +71,7 @@ export function loginPage(){
   waitInfo.hidden=!wait;
   const submit=content.querySelector('.login-form button[type="submit"]');
   if(wait){const minutes=Math.floor(wait.seconds/60),seconds=String(wait.seconds%60).padStart(2,'0');waitInfo.textContent=t(wait.reason==='email_quota'?'Email limit reached. Retry in {time}. This is a retry estimate, not a guaranteed reset time.':'Retry in {time}.',{time:minutes+':'+seconds});if(submit){submit.disabled=true;submit.textContent=t('Please wait');}}
-  else if(submit&&!busy&&account.status!=='loading'){submit.disabled=false;submit.textContent=t(mode==='signup'?'Create account':mode==='password'?'Sign in':sent?'Send another link':'Send sign-in link');}
+  else if(submit&&!busy&&account.status!=='loading'){submit.disabled=false;submit.textContent=t(mode==='signup'?'Send join request':mode==='password'?'Sign in':sent?'Send another link':'Send sign-in link');}
  }
  retryTimer=setInterval(()=>{if(!page.isConnected){clearInterval(retryTimer);return;}updateWait();},1000);
  setTimeout(updateWait,0);

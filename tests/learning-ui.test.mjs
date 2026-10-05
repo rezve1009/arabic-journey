@@ -1,3 +1,4 @@
+import {approveFixtureUsers}from './approved-fixture.mjs';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
@@ -121,7 +122,7 @@ window.supabase = {
     rpc: request,
   }),
 };
-const { initializeSupabase, getAccount } = await import("../js/supabase.js");
+const { initializeSupabase, getAccount,loadAccount } = await import("../js/supabase.js");
 const { reviewPage, setReviewRenderer, unmountReview } = await import(
   "../js/review.js"
 );
@@ -153,7 +154,7 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
       .filter((f) => f.endsWith(".sql"))
       .sort())
       await db.exec(await readFile("supabase/migrations/" + f, "utf8"));
-    await db.query("insert into auth.users(id)values($1)", [uid]);
+    await approveFixtureUsers(db);await db.query("insert into auth.users(id)values($1)", [uid]);
     await db.exec("set role authenticated");
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
       uid,
@@ -341,6 +342,25 @@ test("Mounted review, answer reveal, transactional rating, quiz save and statist
     document.querySelector('[aria-label="Words in the next review batch"]').value='1';button('Start next review').click();
     await wait(()=>button('Show Answer'));assert(document.body.textContent.includes('Upcoming review session'));button('Show Answer').click();button('Good').click();
     await wait(()=>button('Next upcoming batch'));assert(document.body.textContent.includes('Session complete'));unmountReview();
+
+    // Owner administration and the join-request login state are real RPC flows.
+    const {adminPage}=await import('../js/admin.js');const {loginPage,setLoginRenderer}=await import('../js/login.js');
+    const pendingA=randomUUID(),pendingB=randomUUID(),pendingC=randomUUID();
+    await db.exec('reset role;alter table auth.users disable trigger zz_test_approval;');
+    await db.query("update public.app_memberships set role='admin'where user_id=$1",[uid]);
+    await db.query('insert into auth.users(id,email)values($1,$2),($3,$4),($5,$6)',[pendingA,'first@example.test',pendingB,'second@example.test',pendingC,'third@example.test']);
+    await db.query("update public.app_memberships set requested_at=now()-case when user_id=$1 then interval'3 hours'when user_id=$2 then interval'2 hours'else interval'1 hour'end where user_id in($1,$2,$3)",[pendingA,pendingB,pendingC]);
+    await db.exec('set role authenticated');await loadAccount();assert.equal(getAccount().access.role,'admin');
+    document.body.replaceChildren(adminPage());await wait(()=>button('Accept'));button('Accept').click();
+    await wait(()=>document.body.textContent.includes('2 pending requests'));button('Decline').click();
+    await wait(()=>document.body.textContent.includes('1 pending requests'));assert.equal(document.querySelectorAll('.access-request').length,1);
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[pendingC]);await loadAccount({id:pendingC,email:'third@example.test'});assert.equal(getAccount().status,'pending');
+    setLoginRenderer(()=>document.body.replaceChildren(loginPage()));document.body.replaceChildren(loginPage());assert(document.body.textContent.includes('Awaiting approval'));assert(button('Check approval status'));assert(!document.body.textContent.includes('Set a password for next time'));
+    document.body.replaceChildren(adminPage());assert(document.body.textContent.includes('Only the administrator'));
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid]);await request('access_decide',{p_user:pendingC,p_revision:1,p_decision:'approved'});
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[pendingC]);document.body.replaceChildren(loginPage());button('Check approval status').click();await wait(()=>getAccount().status==='ready');assert(document.body.textContent.includes('Continue learning'));
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid]);await request('access_decide',{p_user:pendingC,p_revision:2,p_decision:'declined'});
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[pendingC]);await loadAccount();document.body.replaceChildren(loginPage());assert(document.body.textContent.includes('Request declined'));document.body.replaceChildren();
   } finally {
     await db.close();
   }

@@ -63,6 +63,10 @@ export function settingsPage() {
     identity.className = 'account-email';
     identity.dataset.noTranslate = '';
     identity.textContent = account.user.email;
+    if(account.access?.role==='admin'){
+      const badge=document.createElement('p');badge.className='admin-badge';badge.textContent=t('Administrator');
+      const requests=document.createElement('a');requests.href='#/admin';requests.className='button button-primary';requests.textContent=t('Manage access requests');accountSection.append(badge,requests);
+    }
     accountSection.append(identity);
     const out = button('Sign out', () => run(async () => { await signOut(); codeSent = false; draft = null; }));
     accountSection.append(out);

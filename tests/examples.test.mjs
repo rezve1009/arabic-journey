@@ -1,9 +1,10 @@
+import {approveFixtureUsers}from './approved-fixture.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import {PGlite}from'@electric-sql/pglite';import {readFile,readdir}from'node:fs/promises';import {randomUUID}from'node:crypto';
 test('Multiple examples roundtrip, retry, bounds, owner isolation, per-word history and old backup restore',async()=>{
  const db=new PGlite(),alice=randomUUID(),bob=randomUUID(),word=randomUUID(),op=randomUUID();
  try{await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  for(const f of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
- await db.query('insert into auth.users(id)values($1),($2)',[alice,bob]);await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${alice}',false)`);
+ await approveFixtureUsers(db);await db.query('insert into auth.users(id)values($1),($2)',[alice,bob]);await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${alice}',false)`);
  const values={arabic_word:'كِتَابٌ',bangla_meaning:'বই',english_meaning:'book',word_type:'noun',example_arabic:'هَذَا كِتَابٌ',examples:[{arabic:'أَقْرَأُ كِتَابًا',bangla:'আমি বই পড়ি',english:'I read a book'}]};
  const write=async(vals=values,revision=null,operation=op)=>(await db.query("select public.vocabulary_write($1,'save',$2,$3,$4)result",[operation,word,revision,JSON.stringify(vals)])).rows[0].result;
  const saved=await write();assert.deepEqual(saved.word.examples,values.examples);assert.deepEqual(await write(),saved);
